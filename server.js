@@ -98,6 +98,10 @@ function writeDB(data) { fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2)
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/api/ping', (req, res) => {
+    res.json({ status: "alive" });
+});
+
 app.get('/api/firebase-config', (req, res) => {
     res.json({
         apiKey: process.env.FIREBASE_API_KEY,
