@@ -595,11 +595,53 @@
                     headers: { 'Authorization': 'Bearer ' + freshToken }
                 });
                 if (res.ok) {
-                    contacts = await res.json();
+                    const serverContacts = await res.json();
+                    
+                    // Sync with local cache if server database was cleared
+                    const cachedContacts = JSON.parse(localStorage.getItem('contacts_cache') || '[]');
+                    let updatedContacts = [...serverContacts];
+                    let needsSync = false;
+                    
+                    for (const cached of cachedContacts) {
+                        if (!updatedContacts.some(c => c.userId === cached.userId)) {
+                            needsSync = true;
+                            await syncContactToServer(cached.userId, freshToken);
+                        }
+                    }
+                    
+                    if (needsSync) {
+                        const reRes = await fetch('/api/contacts', {
+                            headers: { 'Authorization': 'Bearer ' + freshToken }
+                        });
+                        if (reRes.ok) {
+                            contacts = await reRes.json();
+                        }
+                    } else {
+                        contacts = serverContacts;
+                    }
+                    
+                    localStorage.setItem('contacts_cache', JSON.stringify(contacts.map(c => ({ userId: c.userId, displayName: c.displayName }))));
                     renderContacts();
                 }
             } catch (err) {
-                console.error("Contacts load failed:", err);
+                console.error("Contacts load failed, using local cache:", err);
+                contacts = JSON.parse(localStorage.getItem('contacts_cache') || '[]').map(c => ({ ...c, online: false }));
+                renderContacts();
+            }
+        }
+
+        async function syncContactToServer(targetUserId, token) {
+            try {
+                await fetch('/api/add-friend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ targetUserId })
+                });
+            } catch (err) {
+                console.error("Failed to sync contact to server:", targetUserId, err);
             }
         }
 
@@ -646,8 +688,13 @@
 
         // Add a contact friend
         window.addFriend = async function() {
-            const targetUserId = prompt("Enter verified Secure ID to link:");
-            if (!targetUserId) return;
+            const targetUserIdInput = prompt("Enter verified Secure ID to link:");
+            if (!targetUserIdInput) return;
+            
+            let targetUserId = targetUserIdInput.trim();
+            if (targetUserId.startsWith('@')) {
+                targetUserId = targetUserId.substring(1);
+            }
             
             const freshToken = await getFreshToken();
             if (!freshToken) return;
@@ -665,6 +712,14 @@
                 const data = await res.json();
                 if (res.ok) {
                     alert("Uplink established with contact successfully!");
+                    
+                    // Update cache
+                    const cachedContacts = JSON.parse(localStorage.getItem('contacts_cache') || '[]');
+                    if (!cachedContacts.some(c => c.userId === targetUserId)) {
+                        cachedContacts.push({ userId: targetUserId, displayName: data.contact ? data.contact.displayName : "Node " + targetUserId.substring(0, 6) });
+                        localStorage.setItem('contacts_cache', JSON.stringify(cachedContacts));
+                    }
+                    
                     loadContacts();
                 } else {
                     alert(data.error || "Failed to link contact.");
@@ -676,10 +731,13 @@
         }
 
         window.directDial = function() {
-            const dialId = document.getElementById('directDialId').value.trim();
+            let dialId = document.getElementById('directDialId').value.trim();
             if (!dialId) {
                 alert("Please enter a Secure ID.");
                 return;
+            }
+            if (dialId.startsWith('@')) {
+                dialId = dialId.substring(1);
             }
             const myId = document.getElementById('myUserId').textContent.substring(1);
             if (dialId === myId) {
@@ -688,6 +746,22 @@
             }
             initiateCall(dialId, "Node " + dialId.substring(0, 6));
         };
+
+        async function acquireMedia() {
+            try {
+                // Try video and audio first
+                return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            } catch (videoErr) {
+                console.warn("Camera and mic failed, trying audio-only fallback...", videoErr);
+                try {
+                    // Fallback to audio-only if camera is missing/denied
+                    return await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                } catch (audioErr) {
+                    console.error("Audio-only acquisition also failed:", audioErr);
+                    throw audioErr;
+                }
+            }
+        }
 
         // WebRTC functions
         async function initiateCall(targetUserId, displayName) {
@@ -699,7 +773,7 @@
             switchState(states.OUTGOING);
 
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                localStream = await acquireMedia();
                 document.getElementById('localVideo').srcObject = localStream;
 
                 peerConnection = new RTCPeerConnection(rtcConfig);
@@ -732,8 +806,16 @@
 
                 socket.emit('call-user', { toUserId: activePeerUserId, offer });
             } catch (err) {
-                console.error(err);
-                alert("Permissions Denied: CypherTalk requires Camera and Microphone access.");
+                console.error("Hardware acquisition failed:", err);
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    alert("Permission Denied: CypherTalk requires Microphone and/or Camera access to make calls.");
+                } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                    alert("Hardware Error: No audio/video input devices were found on this system.");
+                } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+                    alert("Hardware Error: Camera or Microphone is already in use by another application.");
+                } else {
+                    alert("Failed to access hardware devices: " + err.message);
+                }
                 endCall();
             }
         }
@@ -742,7 +824,7 @@
             if (!activePeerUserId || !socket.incomingOffer) return;
 
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                localStream = await acquireMedia();
                 document.getElementById('localVideo').srcObject = localStream;
 
                 peerConnection = new RTCPeerConnection(rtcConfig);
@@ -790,8 +872,16 @@
                 
                 switchState(states.ACTIVE);
             } catch (err) {
-                console.error(err);
-                alert("Failed to access hardware devices.");
+                console.error("Hardware acquisition failed:", err);
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    alert("Permission Denied: CypherTalk requires Microphone and/or Camera access to accept calls.");
+                } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                    alert("Hardware Error: No audio/video input devices were found on this system.");
+                } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+                    alert("Hardware Error: Camera or Microphone is already in use by another application.");
+                } else {
+                    alert("Failed to access hardware devices: " + err.message);
+                }
                 declineCall();
             }
         }
