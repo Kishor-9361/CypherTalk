@@ -304,7 +304,8 @@
             <div class="text-center">
                 <p class="text-label-sm uppercase tracking-widest text-primary mb-xs">Establishing Secure Tunnel</p>
                 <h2 class="font-headline-lg text-on-surface" id="outgoing-name">Contact</h2>
-                <p class="text-body-md text-on-surface-variant animate-pulse">Requesting verification...</p>
+                <p class="text-body-md text-on-surface-variant animate-pulse" id="outgoing-status-text">Requesting verification...</p>
+                <p class="text-xs text-outline mt-sm" id="outgoing-diagnostics">ICE State: new</p>
             </div>
             <button class="bg-error-container text-on-error-container px-lg py-sm rounded-full flex items-center gap-base hover:scale-105 active:scale-95 transition-transform font-bold" onclick="endCall()">
                 <span class="material-symbols-outlined">call_end</span>
@@ -342,6 +343,8 @@
                 <span class="font-mono text-on-surface text-label-md" id="call-timer">00:00:00</span>
                 <span class="h-4 w-px bg-white/20 mx-xs"></span>
                 <span class="text-secondary text-label-sm font-bold">AES-256 E2EE</span>
+                <span class="h-4 w-px bg-white/20 mx-xs"></span>
+                <span class="text-on-surface-variant text-[11px]" id="call-diagnostics">ICE: new</span>
             </div>
             
             <!-- Control Bar -->
@@ -455,6 +458,18 @@
                 toggleSidebar();
             }
         };
+
+        function updateDiagnostics(state) {
+            console.log("ICE Connection State changed:", state);
+            const elOut = document.getElementById('outgoing-diagnostics');
+            if (elOut) {
+                elOut.textContent = "ICE State: " + state;
+            }
+            const diagLabel = document.getElementById('call-diagnostics');
+            if (diagLabel) {
+                diagLabel.textContent = "ICE: " + state;
+            }
+        }
 
         let qrExpanded = true;
         window.toggleQR = function() {
@@ -688,6 +703,15 @@
                 document.getElementById('localVideo').srcObject = localStream;
 
                 peerConnection = new RTCPeerConnection(rtcConfig);
+                updateDiagnostics(peerConnection.iceConnectionState);
+
+                peerConnection.oniceconnectionstatechange = () => {
+                    updateDiagnostics(peerConnection.iceConnectionState);
+                    if (peerConnection.iceConnectionState === 'failed') {
+                        alert("ICE Connection failed. Check firewall or network connectivity.");
+                        endCall();
+                    }
+                };
                 
                 localStream.getTracks().forEach(track => {
                     peerConnection.addTrack(track, localStream);
@@ -722,6 +746,15 @@
                 document.getElementById('localVideo').srcObject = localStream;
 
                 peerConnection = new RTCPeerConnection(rtcConfig);
+                updateDiagnostics(peerConnection.iceConnectionState);
+
+                peerConnection.oniceconnectionstatechange = () => {
+                    updateDiagnostics(peerConnection.iceConnectionState);
+                    if (peerConnection.iceConnectionState === 'failed') {
+                        alert("ICE Connection failed. Check firewall or network connectivity.");
+                        endCall();
+                    }
+                };
 
                 localStream.getTracks().forEach(track => {
                     peerConnection.addTrack(track, localStream);
@@ -776,6 +809,7 @@
             }
 
             iceCandidatesQueue = [];
+            updateDiagnostics('idle');
 
             if (localStream) {
                 localStream.getTracks().forEach(t => t.stop());
