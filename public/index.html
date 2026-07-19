@@ -165,6 +165,12 @@
         .hidden-state {
             display: none !important;
         }
+        .collapsed {
+            width: 0 !important;
+            padding: 0 !important;
+            border-right-width: 0 !important;
+            transform: translateX(-100%) !important;
+        }
     </style>
 </head>
 <body class="h-screen w-screen flex font-body-md overflow-hidden">
@@ -399,27 +405,25 @@
         }
 
         let sidebarOpen = window.innerWidth >= 1024;
+        
+        // Initialize sidebar state on page load
+        if (!sidebarOpen) {
+            document.getElementById('side-nav').classList.add('collapsed');
+            document.getElementById('sidebarToggleIcon').textContent = 'menu';
+        } else {
+            document.getElementById('sidebarToggleIcon').textContent = 'menu_open';
+        }
+
         window.toggleSidebar = function() {
             sidebarOpen = !sidebarOpen;
             const sideNav = document.getElementById('side-nav');
-            const mainCanvas = document.getElementById('main-canvas');
             const toggleIcon = document.getElementById('sidebarToggleIcon');
 
             if (sidebarOpen) {
-                sideNav.classList.remove('-translate-x-full');
-                sideNav.classList.add('translate-x-0');
-                if (window.innerWidth >= 1024) {
-                    mainCanvas.classList.add('lg:ml-[320px]');
-                    mainCanvas.classList.remove('lg:ml-0');
-                }
+                sideNav.classList.remove('collapsed');
                 toggleIcon.textContent = 'menu_open';
             } else {
-                sideNav.classList.remove('translate-x-0');
-                sideNav.classList.add('-translate-x-full');
-                if (window.innerWidth >= 1024) {
-                    mainCanvas.classList.remove('lg:ml-[320px]');
-                    mainCanvas.classList.add('lg:ml-0');
-                }
+                sideNav.classList.add('collapsed');
                 toggleIcon.textContent = 'menu';
             }
         };
