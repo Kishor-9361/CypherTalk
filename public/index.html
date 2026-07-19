@@ -171,6 +171,12 @@
             border-right-width: 0 !important;
             transform: translateX(-100%) !important;
         }
+        @media (max-width: 1024px) {
+            #side-nav:not(.collapsed) ~ #main-canvas #sidebarToggleBtn {
+                opacity: 0;
+                pointer-events: none;
+            }
+        }
         @media (max-width: 768px) {
             .local-video {
                 bottom: 16px !important;
@@ -246,10 +252,6 @@
 
         <!-- Sidebar Footer -->
         <div class="mt-auto border-t border-white/10 pt-md space-y-base">
-            <a class="w-full flex items-center gap-base text-on-surface-variant p-2 hover:bg-white/5 transition-all rounded-lg" href="/architecture.html" target="_blank">
-                <span class="material-symbols-outlined text-[20px]">insights</span>
-                <span class="text-label-md">System Architecture</span>
-            </a>
             <button class="w-full flex items-center gap-base text-on-surface-variant p-2 hover:bg-white/5 transition-all rounded-lg" onclick="alert('AES-256 E2E Encryption Node Active.')">
                 <span class="material-symbols-outlined">settings</span>
                 <span class="text-label-md">Security Settings</span>
@@ -264,7 +266,7 @@
     <!-- Main Canvas Area -->
     <main class="flex-1 w-full h-full relative flex flex-col items-center justify-center overflow-hidden transition-all duration-300 ease-in-out" id="main-canvas" onclick="closeSidebarIfMobile()">
         <!-- Floating Menu Toggle Button -->
-        <button id="sidebarToggleBtn" class="absolute top-md left-md z-50 p-sm glass-panel rounded-xl text-primary hover:bg-white/10 transition-colors flex items-center justify-center shadow-lg" onclick="event.stopPropagation(); toggleSidebar()">
+        <button id="sidebarToggleBtn" class="absolute top-md left-md z-50 p-sm glass-panel rounded-xl text-primary hover:bg-white/10 transition-all duration-200 flex items-center justify-center shadow-lg" onclick="event.stopPropagation(); toggleSidebar()">
             <span class="material-symbols-outlined" id="sidebarToggleIcon">menu_open</span>
         </button>
         <!-- IDLE STATE -->

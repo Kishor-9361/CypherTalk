@@ -3,3 +3,5 @@ data.json
 .env
 .DS_Store
 *.log
+public/architecture.html
+
