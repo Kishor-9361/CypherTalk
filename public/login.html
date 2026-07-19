@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>CypherTalk | Secure Access</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface": "#0f131d",
+                        "surface-container": "#1c1f2a",
+                        "surface-container-low": "#171b26",
+                        "background": "#0b0f19",
+                        "primary": "#b4c5ff",
+                        "primary-container": "#2563eb",
+                        "secondary": "#4edea3",
+                        "outline": "#8d90a0",
+                        "on-surface": "#dfe2f1",
+                        "on-surface-variant": "#c3c6d7",
+                        "error": "#ffb4ab",
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                        display: ["Outfit", "sans-serif"],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #dfe2f1;
+        }
+        .glass-panel {
+            background: rgba(23, 27, 38, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+        .glow-input:focus {
+            border-color: rgba(37, 99, 235, 0.8) !important;
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.25) !important;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
+    
+    <!-- Background Ambient Glow -->
+    <div class="absolute inset-0 pointer-events-none opacity-30">
+        <div class="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-primary-container/20 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-secondary/15 rounded-full blur-[100px]"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="w-full max-w-[450px] z-10">
+        <!-- Logo Header -->
+        <div class="text-center mb-8">
+            <h1 class="font-display text-4xl font-bold text-primary tracking-tight mb-2">CypherTalk</h1>
+            <p class="text-on-surface-variant text-sm flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-[16px] text-secondary">verified_user</span>
+                Decentralized & Secure WebRTC Tunneling
+            </p>
+        </div>
+
+        <!-- Glass Panel Box -->
+        <div class="glass-panel rounded-2xl p-8 flex flex-col gap-6">
+            <!-- Tabs -->
+            <div class="flex border-b border-white/10" id="authTabs">
+                <button class="flex-1 pb-3 text-center font-display font-semibold border-b-2 border-primary text-primary transition-all duration-300" id="tabLoginBtn" onclick="setTab('login')">
+                    Login
+                </button>
+                <button class="flex-1 pb-3 text-center font-display font-semibold border-b-2 border-transparent text-on-surface-variant hover:text-on-surface transition-all duration-300" id="tabRegisterBtn" onclick="setTab('register')">
+                    Register
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" onsubmit="handleLogin(event)" class="flex flex-col gap-4">
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs uppercase tracking-wider text-outline" for="loginEmail">Secure ID / Email</label>
+                    <input type="email" id="loginEmail" required class="bg-background/80 border border-white/10 rounded-lg py-2.5 px-4 text-on-surface glow-input transition-all placeholder-white/20" placeholder="user@domain.com">
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs uppercase tracking-wider text-outline" for="loginPassword">Cipher Key / Password</label>
+                    <input type="password" id="loginPassword" required class="bg-background/80 border border-white/10 rounded-lg py-2.5 px-4 text-on-surface glow-input transition-all placeholder-••••••••" placeholder="••••••••">
+                </div>
+                <button type="submit" class="bg-primary-container text-white py-2.5 rounded-lg font-display font-semibold hover:brightness-110 active:scale-98 transition-all mt-2 shadow-lg shadow-primary-container/20">
+                    Sign In to Node
+                </button>
+            </form>
+
+            <!-- Register Form (OTP Step 1) -->
+            <form id="registerStep1" onsubmit="handleSendOTP(event)" class="hidden flex flex-col gap-4">
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs uppercase tracking-wider text-outline" for="regEmail">Verification Email</label>
+                    <input type="email" id="regEmail" required class="bg-background/80 border border-white/10 rounded-lg py-2.5 px-4 text-on-surface glow-input transition-all placeholder-white/20" placeholder="user@domain.com">
+                </div>
+                <button type="submit" id="btnSendOtp" class="bg-primary-container text-white py-2.5 rounded-lg font-display font-semibold hover:brightness-110 active:scale-98 transition-all mt-2">
+                    Send Verification OTP
+                </button>
+            </form>
+
+            <!-- Register Form (OTP Step 2) -->
+            <form id="registerStep2" onsubmit="handleRegister(event)" class="hidden flex flex-col gap-4">
+                <div class="bg-secondary/10 border border-secondary/20 p-3 rounded-lg text-secondary text-xs flex items-start gap-2">
+                    <span class="material-symbols-outlined text-[16px] mt-0.5">info</span>
+                    <span>An OTP has been dispatched to your email. Check your dev console or inbox to authorize this node.</span>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs uppercase tracking-wider text-outline" for="regOtp">6-Digit OTP Code</label>
+                    <input type="text" id="regOtp" required class="bg-background/80 border border-white/10 rounded-lg py-2.5 px-4 text-on-surface glow-input transition-all placeholder-123456 text-center font-mono tracking-widest text-lg" placeholder="123456" maxlength="6" pattern="\d{6}">
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs uppercase tracking-wider text-outline" for="regDisplayName">Uplink Display Name</label>
+                    <input type="text" id="regDisplayName" required class="bg-background/80 border border-white/10 rounded-lg py-2.5 px-4 text-on-surface glow-input transition-all placeholder-e.g. Alex" placeholder="Alex">
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs uppercase tracking-wider text-outline" for="regPassword">Access Password</label>
+                    <input type="password" id="regPassword" required class="bg-background/80 border border-white/10 rounded-lg py-2.5 px-4 text-on-surface glow-input transition-all placeholder-••••••••" placeholder="••••••••">
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs uppercase tracking-wider text-outline" for="regConfirmPassword">Confirm Password</label>
+                    <input type="password" id="regConfirmPassword" required class="bg-background/80 border border-white/10 rounded-lg py-2.5 px-4 text-on-surface glow-input transition-all placeholder-••••••••" placeholder="••••••••">
+                </div>
+                <div class="flex gap-2 mt-2">
+                    <button type="button" onclick="resetRegisterFlow()" class="flex-1 py-2.5 rounded-lg border border-white/10 text-on-surface-variant hover:bg-white/5 transition-all text-sm font-semibold">
+                        Back
+                    </button>
+                    <button type="submit" class="flex-[2] bg-secondary text-background py-2.5 rounded-lg font-display font-bold hover:brightness-110 active:scale-98 transition-all text-sm">
+                        Create Node Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'login';
+        let verifiedEmail = '';
+
+        function setTab(tab) {
+            currentTab = tab;
+            const tabLoginBtn = document.getElementById('tabLoginBtn');
+            const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+            const loginForm = document.getElementById('loginForm');
+            const registerStep1 = document.getElementById('registerStep1');
+            const registerStep2 = document.getElementById('registerStep2');
+
+            if (tab === 'login') {
+                tabLoginBtn.className = "flex-1 pb-3 text-center font-display font-semibold border-b-2 border-primary text-primary transition-all duration-300";
+                tabRegisterBtn.className = "flex-1 pb-3 text-center font-display font-semibold border-b-2 border-transparent text-on-surface-variant hover:text-on-surface transition-all duration-300";
+                loginForm.classList.remove('hidden');
+                registerStep1.classList.add('hidden');
+                registerStep2.classList.add('hidden');
+            } else {
+                tabLoginBtn.className = "flex-1 pb-3 text-center font-display font-semibold border-b-2 border-transparent text-on-surface-variant hover:text-on-surface transition-all duration-300";
+                tabRegisterBtn.className = "flex-1 pb-3 text-center font-display font-semibold border-b-2 border-primary text-primary transition-all duration-300";
+                loginForm.classList.add('hidden');
+                resetRegisterFlow();
+            }
+        }
+
+        function resetRegisterFlow() {
+            document.getElementById('registerStep1').classList.remove('hidden');
+            document.getElementById('registerStep2').classList.add('hidden');
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regOtp').value = '';
+            document.getElementById('regDisplayName').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regConfirmPassword').value = '';
+            verifiedEmail = '';
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('userId', data.userId);
+                    localStorage.setItem('displayName', data.displayName);
+                    localStorage.setItem('email', email);
+                    window.location.href = '/';
+                } else {
+                    alert(data.error || 'Authentication failed. Please verify credentials.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection failure to local server node.');
+            }
+        }
+
+        async function handleSendOTP(e) {
+            e.preventDefault();
+            const email = document.getElementById('regEmail').value;
+            const btn = document.getElementById('btnSendOtp');
+            btn.disabled = true;
+            btn.innerText = 'Requesting...';
+
+            try {
+                const res = await fetch('/api/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                if (res.ok) {
+                    verifiedEmail = email;
+                    document.getElementById('registerStep1').classList.add('hidden');
+                    document.getElementById('registerStep2').classList.remove('hidden');
+                } else {
+                    alert('Failed to request verification code.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Network connection error.');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Send Verification OTP';
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const code = document.getElementById('regOtp').value;
+            const displayName = document.getElementById('regDisplayName').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match.');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: verifiedEmail, code, password, displayName })
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    alert('Profile registration verified! You can now log in.');
+                    setTab('login');
+                    document.getElementById('loginEmail').value = verifiedEmail;
+                } else {
+                    alert(data.error || 'Registration failed.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Verification process timed out.');
+            }
+        }
+    </script>
+</body>
+</html>

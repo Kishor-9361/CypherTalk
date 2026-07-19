@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>CypherTalk | Secure Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#00a572",
+                    "primary-fixed-dim": "#b4c5ff",
+                    "surface-container-highest": "#313540",
+                    "surface": "#0f131d",
+                    "on-secondary-container": "#00311f",
+                    "primary-container": "#2563eb",
+                    "secondary-fixed": "#6ffbbe",
+                    "surface-container-lowest": "#0a0e18",
+                    "surface-tint": "#b4c5ff",
+                    "outline-variant": "#434655",
+                    "on-background": "#dfe2f1",
+                    "inverse-primary": "#0053db",
+                    "on-primary-container": "#eeefff",
+                    "error-container": "#93000a",
+                    "on-surface-variant": "#c3c6d7",
+                    "on-primary": "#002a78",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "on-surface": "#dfe2f1",
+                    "secondary": "#4edea3",
+                    "on-secondary-fixed": "#002113",
+                    "surface-dim": "#0f131d",
+                    "outline": "#8d90a0",
+                    "on-tertiary-fixed": "#40000d",
+                    "secondary-fixed-dim": "#4edea3",
+                    "surface-container-high": "#262a35",
+                    "on-secondary": "#003824",
+                    "surface-container": "#1c1f2a",
+                    "inverse-surface": "#dfe2f1",
+                    "primary": "#b4c5ff",
+                    "on-tertiary": "#67001b",
+                    "on-error-container": "#ffdad6",
+                    "primary-fixed": "#dbe1ff",
+                    "on-primary-fixed": "#00174b",
+                    "on-tertiary-fixed-variant": "#92002a",
+                    "on-error": "#690005",
+                    "on-secondary-fixed-variant": "#005236",
+                    "inverse-on-surface": "#2c303b",
+                    "error": "#ffb4ab",
+                    "surface-container-low": "#171b26",
+                    "tertiary-fixed": "#ffdadb",
+                    "background": "#0f131d",
+                    "tertiary-fixed-dim": "#ffb2b7",
+                    "surface-bright": "#353944",
+                    "tertiary": "#ffb2b7",
+                    "tertiary-container": "#d22348",
+                    "on-tertiary-container": "#ffecec",
+                    "surface-variant": "#313540"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "80px",
+                    "sm": "12px",
+                    "md": "24px",
+                    "lg": "48px",
+                    "container-max": "1440px",
+                    "xs": "4px",
+                    "base": "8px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Outfit"],
+                    "headline-lg-mobile": ["Outfit"],
+                    "label-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-md": ["Outfit"],
+                    "body-md": ["Inter"],
+                    "display": ["Outfit"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #dfe2f1;
+            overflow: hidden;
+        }
+        .glass-panel {
+            background: rgba(23, 27, 38, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .pulse-emerald {
+            animation: pulse-emerald 2s infinite;
+        }
+        @keyframes pulse-emerald {
+            0% { box-shadow: 0 0 0 0 rgba(78, 222, 163, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(78, 222, 163, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(78, 222, 163, 0); }
+        }
+        .ring-animation {
+            animation: ring 1.5s ease infinite;
+        }
+        @keyframes ring {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .active-call-grid {
+            display: grid;
+            grid-template-areas: "remote";
+            position: relative;
+        }
+        .remote-video {
+            grid-area: remote;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .local-video {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            width: 240px;
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            border: 2px solid rgba(37, 99, 235, 0.5);
+            z-index: 10;
+            object-fit: cover;
+        }
+        .hidden-state {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex font-body-md overflow-hidden">
+    
+    <!-- Auth Guard Logic -->
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+    </script>
+
+    <!-- Sidebar Section -->
+    <aside class="bg-surface-container-low/90 dark:bg-surface-container-low/90 backdrop-blur-xl border-r border-white/10 h-full w-[320px] flex flex-col p-md gap-lg fixed left-0 top-0 z-40" id="side-nav">
+        <!-- Brand & User Identity -->
+        <div class="flex flex-col gap-sm">
+            <h1 class="font-display text-headline-md text-primary">CypherTalk</h1>
+            <div class="glass-panel p-sm rounded-xl flex items-center gap-sm">
+                <div class="w-12 h-12 rounded-full overflow-hidden border border-primary/30 flex items-center justify-center bg-primary-container/20 text-primary font-bold text-lg font-display" id="myAvatar">
+                    U
+                </div>
+                <div class="flex-1 overflow-hidden">
+                    <p class="font-headline-md text-label-md text-on-surface truncate" id="myDisplayName">Loading...</p>
+                    <p class="text-label-sm text-on-surface-variant truncate" id="myUserId">@loading</p>
+                </div>
+                <button class="p-xs text-primary hover:bg-primary/10 rounded-lg transition-colors" onclick="copyID()" title="Copy Secure ID">
+                    <span class="material-symbols-outlined text-[20px]">content_copy</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- QR Invitation -->
+        <div class="flex flex-col gap-xs">
+            <p class="text-label-sm uppercase tracking-widest text-outline">Your Secure Key</p>
+            <div class="glass-panel p-md rounded-xl flex flex-col items-center gap-base">
+                <div class="bg-white p-1 rounded-sm" id="qrcode"></div>
+                <p class="text-label-sm text-on-surface-variant text-center px-sm">Scan to add as contact</p>
+            </div>
+        </div>
+
+        <!-- Contacts List -->
+        <div class="flex-1 flex flex-col gap-sm overflow-hidden">
+            <div class="flex justify-between items-center px-xs">
+                <p class="text-label-sm uppercase tracking-widest text-outline">Verified Contacts</p>
+                <button class="text-secondary hover:underline text-label-sm font-semibold" onclick="addFriend()">Add New</button>
+            </div>
+            <div class="flex-1 overflow-y-auto pr-xs space-y-sm" id="contactList">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="mt-auto border-t border-white/10 pt-md space-y-base">
+            <button class="w-full flex items-center gap-base text-on-surface-variant p-2 hover:bg-white/5 transition-all rounded-lg" onclick="alert('AES-256 E2E Encryption Node Active.')">
+                <span class="material-symbols-outlined">settings</span>
+                <span class="text-label-md">Security Settings</span>
+            </button>
+            <button class="w-full flex items-center gap-base text-error p-2 hover:bg-error/10 transition-all rounded-lg" onclick="logout()">
+                <span class="material-symbols-outlined">logout</span>
+                <span class="text-label-md">Terminate Session</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Canvas Area -->
+    <main class="flex-1 ml-[320px] relative h-full flex flex-col items-center justify-center overflow-hidden">
+        <!-- IDLE STATE -->
+        <div class="flex flex-col items-center gap-md z-10" id="state-idle">
+            <div class="w-32 h-32 rounded-full glass-panel flex items-center justify-center border-primary/20">
+                <span class="material-symbols-outlined text-[64px] text-primary/30">forum</span>
+            </div>
+            <div class="text-center">
+                <h2 class="font-headline-lg text-on-surface">Encrypted Channel Idle</h2>
+                <p class="text-body-md text-on-surface-variant mt-xs">Select a verified contact to initiate a secure uplink</p>
+            </div>
+        </div>
+
+        <!-- OUTGOING CALL STATE -->
+        <div class="hidden-state flex flex-col items-center gap-lg z-10" id="state-outgoing">
+            <div class="relative flex items-center justify-center">
+                <div class="absolute inset-0 bg-primary/20 rounded-full animate-ping"></div>
+                <div class="w-32 h-32 rounded-full flex items-center justify-center bg-primary-container/20 border-4 border-primary ring-8 ring-primary/10 relative z-10 text-primary font-bold font-display text-4xl" id="outgoing-avatar">
+                    C
+                </div>
+            </div>
+            <div class="text-center">
+                <p class="text-label-sm uppercase tracking-widest text-primary mb-xs">Establishing Secure Tunnel</p>
+                <h2 class="font-headline-lg text-on-surface" id="outgoing-name">Contact</h2>
+                <p class="text-body-md text-on-surface-variant animate-pulse">Requesting verification...</p>
+            </div>
+            <button class="bg-error-container text-on-error-container px-lg py-sm rounded-full flex items-center gap-base hover:scale-105 active:scale-95 transition-transform font-bold" onclick="endCall()">
+                <span class="material-symbols-outlined">call_end</span>
+                CANCEL
+            </button>
+        </div>
+
+        <!-- INCOMING CALL STATE -->
+        <div class="hidden-state flex flex-col items-center gap-lg z-10 ring-animation" id="state-incoming">
+            <div class="w-32 h-32 rounded-full flex items-center justify-center bg-secondary/20 border-4 border-secondary ring-8 ring-secondary/10 text-secondary font-bold font-display text-4xl" id="incoming-avatar">
+                C
+            </div>
+            <div class="text-center">
+                <p class="text-label-sm uppercase tracking-widest text-secondary mb-xs">Incoming Secure Call</p>
+                <h2 class="font-headline-lg text-on-surface" id="incoming-name">Unknown Contact</h2>
+            </div>
+            <div class="flex gap-md">
+                <button class="w-16 h-16 rounded-full bg-secondary text-on-secondary flex items-center justify-center shadow-lg shadow-secondary/20 hover:scale-110 transition-transform" onclick="acceptCall()">
+                    <span class="material-symbols-outlined text-[32px]">call</span>
+                </button>
+                <button class="w-16 h-16 rounded-full bg-error text-on-error flex items-center justify-center shadow-lg shadow-error/20 hover:scale-110 transition-transform" onclick="declineCall()">
+                    <span class="material-symbols-outlined text-[32px]">call_end</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ACTIVE CALL STATE -->
+        <div class="hidden-state absolute inset-0 w-full h-full active-call-grid bg-black" id="state-active">
+            <video autoplay class="remote-video" id="remoteVideo" playsinline></video>
+            <video autoplay class="local-video" id="localVideo" muted playsinline></video>
+            
+            <!-- Call UI Overlay -->
+            <div class="absolute top-md left-md p-sm glass-panel rounded-xl flex items-center gap-sm">
+                <div class="w-2 h-2 bg-error rounded-full animate-pulse"></div>
+                <span class="font-mono text-on-surface text-label-md" id="call-timer">00:00:00</span>
+                <span class="h-4 w-px bg-white/20 mx-xs"></span>
+                <span class="text-secondary text-label-sm font-bold">AES-256 E2EE</span>
+            </div>
+            
+            <!-- Control Bar -->
+            <div class="absolute bottom-lg left-1/2 -translate-x-1/2 flex items-center gap-md px-md py-sm glass-panel rounded-full shadow-2xl">
+                <button class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface hover:bg-white/10 transition-colors" id="mic-btn" onclick="toggleMic()" title="Toggle Mic">
+                    <span class="material-symbols-outlined" id="mic-icon">mic</span>
+                </button>
+                <button class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface hover:bg-white/10 transition-colors" id="cam-btn" onclick="toggleCamera()" title="Toggle Camera">
+                    <span class="material-symbols-outlined" id="cam-icon">videocam</span>
+                </button>
+                <button class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface hover:bg-white/10 transition-colors" id="share-btn" onclick="toggleScreenShare()" title="Share Screen">
+                    <span class="material-symbols-outlined" id="share-icon">screen_share</span>
+                </button>
+                <button class="w-14 h-14 rounded-full bg-error flex items-center justify-center text-on-error shadow-xl shadow-error/30 hover:scale-110 active:scale-95 transition-all" onclick="endCall()" title="End Call">
+                    <span class="material-symbols-outlined text-[32px]">call_end</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- UI & Signaling logic -->
+    <script>
+        const states = {
+            IDLE: 'state-idle',
+            OUTGOING: 'state-outgoing',
+            INCOMING: 'state-incoming',
+            ACTIVE: 'state-active'
+        };
+
+        let currentActiveState = states.IDLE;
+        let callTimerInterval;
+
+        function switchState(newState) {
+            Object.values(states).forEach(id => {
+                document.getElementById(id).classList.add('hidden-state');
+            });
+            document.getElementById(newState).classList.remove('hidden-state');
+            currentActiveState = newState;
+
+            if (newState === states.ACTIVE) {
+                startTimer();
+            } else {
+                stopTimer();
+            }
+        }
+
+        function startTimer() {
+            let seconds = 0;
+            const timerEl = document.getElementById('call-timer');
+            callTimerInterval = setInterval(() => {
+                seconds++;
+                const hrs = Math.floor(seconds / 3600).toString().padStart(2, '0');
+                const mins = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+                const secs = (seconds % 60).toString().padStart(2, '0');
+                timerEl.innerText = `${hrs}:${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(callTimerInterval);
+            document.getElementById('call-timer').innerText = "00:00:00";
+        }
+
+        function copyID() {
+            const rawId = document.getElementById('myUserId').textContent;
+            const cleanId = rawId.startsWith('@') ? rawId.substring(1) : rawId;
+            navigator.clipboard.writeText(cleanId).then(() => {
+                alert("Secure ID copied: " + cleanId);
+            });
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        }
+
+        // --- DYNAMIC DATA AND WEBRTC LOGIC ---
+        let contacts = [];
+        let localStream;
+        let screenStream;
+        let peerConnection;
+        let activePeerUserId = null;
+        let activePeerName = null;
+
+        const rtcConfig = {
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        };
+
+        // Load logged in user profile
+        async function loadProfile() {
+            try {
+                const res = await fetch('/api/profile', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (res.ok) {
+                    const profile = await res.json();
+                    document.getElementById('myDisplayName').textContent = profile.displayName;
+                    document.getElementById('myUserId').textContent = '@' + profile.userId;
+                    
+                    const avatarEl = document.getElementById('myAvatar');
+                    avatarEl.textContent = profile.displayName.charAt(0).toUpperCase();
+                    
+                    // Generate QR Code
+                    document.getElementById("qrcode").innerHTML = '';
+                    new QRCode(document.getElementById("qrcode"), {
+                        text: profile.userId,
+                        width: 140,
+                        height: 140,
+                        colorDark : "#0f131d",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.H
+                    });
+                } else {
+                    logout();
+                }
+            } catch (err) {
+                console.error("Profile load failed:", err);
+            }
+        }
+
+        // Load friends/contacts
+        async function loadContacts() {
+            try {
+                const res = await fetch('/api/contacts', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    contacts = await res.json();
+                    renderContacts();
+                }
+            } catch (err) {
+                console.error("Contacts load failed:", err);
+            }
+        }
+
+        function renderContacts() {
+            const listEl = document.getElementById('contactList');
+            listEl.innerHTML = '';
+            
+            if (contacts.length === 0) {
+                listEl.innerHTML = '<p class="text-xs text-outline text-center py-4">No verified contacts yet.</p>';
+                return;
+            }
+            
+            contacts.forEach(contact => {
+                const isOnline = contact.online;
+                const item = document.createElement('div');
+                item.className = `group flex items-center gap-sm p-sm rounded-lg hover:bg-white/5 cursor-pointer transition-all border border-transparent hover:border-white/5 ${!isOnline ? 'opacity-60 grayscale hover:grayscale-0 hover:opacity-100' : ''}`;
+                
+                const initial = contact.displayName.charAt(0).toUpperCase();
+                
+                item.innerHTML = `
+                    <div class="relative">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-primary-container/20 border border-primary/30 font-bold font-display text-primary">
+                            ${initial}
+                        </div>
+                        <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-surface ${isOnline ? 'bg-secondary pulse-emerald' : 'bg-outline'}"></span>
+                    </div>
+                    <div class="flex-1 overflow-hidden">
+                        <p class="font-label-md text-on-surface group-hover:text-primary transition-colors truncate">${contact.displayName}</p>
+                        <p class="text-label-sm truncate ${isOnline ? 'text-secondary font-semibold' : 'text-outline'}">${isOnline ? 'Available Now' : 'Offline'}</p>
+                    </div>
+                    ${isOnline ? `<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">videocam</span>` : ''}
+                `;
+                
+                if (isOnline) {
+                    item.onclick = () => initiateCall(contact.userId, contact.displayName);
+                } else {
+                    item.onclick = () => alert(`${contact.displayName} is offline.`);
+                }
+                
+                listEl.appendChild(item);
+            });
+        }
+
+        // Add a contact friend
+        async function addFriend() {
+            const targetUserId = prompt("Enter verified Secure ID to link:");
+            if (!targetUserId) return;
+            
+            try {
+                const res = await fetch('/api/add-friend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ targetUserId })
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    alert("Uplink established with contact successfully!");
+                    loadContacts();
+                } else {
+                    alert(data.error || "Failed to link contact.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network communication error.");
+            }
+        }
+
+        // Socket connection
+        const socket = io({
+            auth: { token }
+        });
+
+        socket.on('connect', () => {
+            console.log("Connected to secure signaling endpoint");
+        });
+
+        socket.on('user-status-change', ({ userId, online }) => {
+            const idx = contacts.findIndex(c => c.userId === userId);
+            if (idx !== -1) {
+                contacts[idx].online = online;
+                renderContacts();
+            }
+        });
+
+        // WebRTC Signaling Handlers
+        socket.on('incoming-call', async ({ fromUserId, offer }) => {
+            if (currentActiveState !== states.IDLE) {
+                socket.emit('reject-call', { toUserId: fromUserId });
+                return;
+            }
+
+            activePeerUserId = fromUserId;
+            const contact = contacts.find(c => c.userId === fromUserId);
+            activePeerName = contact ? contact.displayName : fromUserId;
+            
+            document.getElementById('incoming-name').textContent = activePeerName;
+            document.getElementById('incoming-avatar').textContent = activePeerName.charAt(0).toUpperCase();
+            
+            switchState(states.INCOMING);
+            socket.incomingOffer = offer;
+        });
+
+        socket.on('call-accepted', async ({ fromUserId, answer }) => {
+            if (currentActiveState !== states.OUTGOING || fromUserId !== activePeerUserId) return;
+            
+            try {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                switchState(states.ACTIVE);
+            } catch (err) {
+                console.error(err);
+                endCall();
+            }
+        });
+
+        socket.on('call-rejected', ({ fromUserId }) => {
+            if (fromUserId === activePeerUserId) {
+                alert("Call declined by contact.");
+                endCall();
+            }
+        });
+
+        socket.on('call-ended', ({ fromUserId }) => {
+            if (fromUserId === activePeerUserId) {
+                endCall();
+            }
+        });
+
+        socket.on('ice-candidate', async ({ fromUserId, candidate }) => {
+            if (fromUserId !== activePeerUserId || !peerConnection) return;
+            try {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        // WebRTC functions
+        async function initiateCall(targetUserId, displayName) {
+            activePeerUserId = targetUserId;
+            activePeerName = displayName;
+
+            document.getElementById('outgoing-name').textContent = displayName;
+            document.getElementById('outgoing-avatar').textContent = displayName.charAt(0).toUpperCase();
+            switchState(states.OUTGOING);
+
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('localVideo').srcObject = localStream;
+
+                peerConnection = new RTCPeerConnection(rtcConfig);
+                
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+
+                peerConnection.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        socket.emit('ice-candidate', { toUserId: activePeerUserId, candidate: event.candidate });
+                    }
+                };
+
+                peerConnection.ontrack = (event) => {
+                    document.getElementById('remoteVideo').srcObject = event.streams[0];
+                };
+
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+
+                socket.emit('call-user', { toUserId: activePeerUserId, offer });
+            } catch (err) {
+                console.error(err);
+                alert("Permissions Denied: CypherTalk requires Camera and Microphone access.");
+                endCall();
+            }
+        }
+
+        async function acceptCall() {
+            if (!activePeerUserId || !socket.incomingOffer) return;
+
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('localVideo').srcObject = localStream;
+
+                peerConnection = new RTCPeerConnection(rtcConfig);
+
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+
+                peerConnection.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        socket.emit('ice-candidate', { toUserId: activePeerUserId, candidate: event.candidate });
+                    }
+                };
+
+                peerConnection.ontrack = (event) => {
+                    document.getElementById('remoteVideo').srcObject = event.streams[0];
+                };
+
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(socket.incomingOffer));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+
+                socket.emit('accept-call', { toUserId: activePeerUserId, answer });
+                socket.incomingOffer = null;
+                
+                switchState(states.ACTIVE);
+            } catch (err) {
+                console.error(err);
+                alert("Failed to access hardware devices.");
+                declineCall();
+            }
+        }
+
+        function declineCall() {
+            if (activePeerUserId) {
+                socket.emit('reject-call', { toUserId: activePeerUserId });
+            }
+            endCall();
+        }
+
+        function endCall() {
+            if (activePeerUserId) {
+                socket.emit('end-call', { toUserId: activePeerUserId });
+            }
+
+            if (localStream) {
+                localStream.getTracks().forEach(t => t.stop());
+                localStream = null;
+            }
+
+            if (screenStream) {
+                screenStream.getTracks().forEach(t => t.stop());
+                screenStream = null;
+            }
+
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+
+            document.getElementById('localVideo').srcObject = null;
+            document.getElementById('remoteVideo').srcObject = null;
+
+            activePeerUserId = null;
+            activePeerName = null;
+
+            micEnabled = true;
+            camEnabled = true;
+            document.getElementById('mic-icon').textContent = 'mic';
+            document.getElementById('mic-btn').classList.remove('text-error');
+            document.getElementById('cam-icon').textContent = 'videocam';
+            document.getElementById('cam-btn').classList.remove('text-error');
+            document.getElementById('share-icon').textContent = 'screen_share';
+
+            switchState(states.IDLE);
+        }
+
+        // Toggle Audio/Video Track States
+        let micEnabled = true;
+        function toggleMic() {
+            if (!localStream) return;
+            micEnabled = !micEnabled;
+            localStream.getAudioTracks().forEach(t => t.enabled = micEnabled);
+            
+            const icon = document.getElementById('mic-icon');
+            const btn = document.getElementById('mic-btn');
+            icon.textContent = micEnabled ? 'mic' : 'mic_off';
+            if (micEnabled) {
+                btn.classList.remove('text-error');
+            } else {
+                btn.classList.add('text-error');
+            }
+        }
+
+        let camEnabled = true;
+        function toggleCamera() {
+            if (!localStream) return;
+            camEnabled = !camEnabled;
+            localStream.getVideoTracks().forEach(t => t.enabled = camEnabled);
+            
+            const icon = document.getElementById('cam-icon');
+            const btn = document.getElementById('cam-btn');
+            icon.textContent = camEnabled ? 'videocam' : 'videocam_off';
+            if (camEnabled) {
+                btn.classList.remove('text-error');
+            } else {
+                btn.classList.add('text-error');
+            }
+        }
+
+        // Screen Sharing Logic
+        async function toggleScreenShare() {
+            if (!screenStream) {
+                try {
+                    screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                    const screenTrack = screenStream.getVideoTracks()[0];
+                    
+                    const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
+                    if (sender) {
+                        sender.replaceTrack(screenTrack);
+                    }
+                    
+                    screenTrack.onended = () => {
+                        stopScreenShare();
+                    };
+                    
+                    document.getElementById('share-icon').textContent = 'stop_screen_share';
+                    document.getElementById('share-btn').classList.add('text-secondary');
+                } catch (err) {
+                    console.error("Screen share failed:", err);
+                }
+            } else {
+                stopScreenShare();
+            }
+        }
+
+        function stopScreenShare() {
+            if (screenStream) {
+                screenStream.getTracks().forEach(t => t.stop());
+                screenStream = null;
+            }
+            
+            const videoTrack = localStream.getVideoTracks()[0];
+            const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
+            if (sender && videoTrack) {
+                sender.replaceTrack(videoTrack);
+            }
+            
+            document.getElementById('share-icon').textContent = 'screen_share';
+            document.getElementById('share-btn').classList.remove('text-secondary');
+        }
+
+        // Load data on window startup
+        window.addEventListener('DOMContentLoaded', () => {
+            loadProfile();
+            loadContacts();
+        });
+    </script>
+</body>
+</html>
