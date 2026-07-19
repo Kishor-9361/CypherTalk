@@ -178,10 +178,16 @@
     </script>
 
     <!-- Sidebar Section -->
-    <aside class="bg-surface-container-low/90 dark:bg-surface-container-low/90 backdrop-blur-xl border-r border-white/10 h-full w-[320px] flex flex-col p-md gap-lg fixed left-0 top-0 z-40" id="side-nav">
+    <aside class="bg-surface-container-low/90 dark:bg-surface-container-low/90 backdrop-blur-xl border-r border-white/10 h-full w-[320px] flex flex-col p-md gap-md fixed left-0 top-0 z-40 transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0" id="side-nav">
         <!-- Brand & User Identity -->
         <div class="flex flex-col gap-sm">
-            <h1 class="font-display text-headline-md text-primary">CypherTalk</h1>
+            <div class="flex justify-between items-center">
+                <h1 class="font-display text-headline-md text-primary">CypherTalk</h1>
+                <!-- Mobile close button -->
+                <button class="lg:hidden p-xs text-outline hover:text-on-surface" onclick="toggleSidebar()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
             <div class="glass-panel p-sm rounded-xl flex items-center gap-sm">
                 <div class="w-12 h-12 rounded-full overflow-hidden border border-primary/30 flex items-center justify-center bg-primary-container/20 text-primary font-bold text-lg font-display" id="myAvatar">
                     U
@@ -196,10 +202,13 @@
             </div>
         </div>
 
-        <!-- QR Invitation -->
+        <!-- QR Invitation (Collapsible) -->
         <div class="flex flex-col gap-xs">
-            <p class="text-label-sm uppercase tracking-widest text-outline">Your Secure Key</p>
-            <div class="glass-panel p-md rounded-xl flex flex-col items-center gap-base">
+            <button onclick="toggleQR()" class="flex justify-between items-center text-label-sm uppercase tracking-widest text-outline w-full hover:text-on-surface transition-colors">
+                <span>Your Secure Key</span>
+                <span class="material-symbols-outlined text-[16px] transition-transform duration-200" id="qr-chevron">expand_less</span>
+            </button>
+            <div class="glass-panel p-md rounded-xl flex flex-col items-center gap-base transition-all duration-300 overflow-hidden" id="qr-container">
                 <div class="bg-white p-1 rounded-sm" id="qrcode"></div>
                 <p class="text-label-sm text-on-surface-variant text-center px-sm">Scan to add as contact</p>
             </div>
@@ -230,7 +239,11 @@
     </aside>
 
     <!-- Main Canvas Area -->
-    <main class="flex-1 ml-[320px] relative h-full flex flex-col items-center justify-center overflow-hidden">
+    <main class="flex-1 w-full h-full relative flex flex-col items-center justify-center overflow-hidden transition-all duration-300 ease-in-out lg:ml-[320px]" id="main-canvas">
+        <!-- Floating Menu Toggle Button -->
+        <button id="sidebarToggleBtn" class="absolute top-md left-md z-50 p-sm glass-panel rounded-xl text-primary hover:bg-white/10 transition-colors flex items-center justify-center shadow-lg" onclick="toggleSidebar()">
+            <span class="material-symbols-outlined" id="sidebarToggleIcon">menu_open</span>
+        </button>
         <!-- IDLE STATE -->
         <div class="flex flex-col items-center gap-md z-10" id="state-idle">
             <div class="w-32 h-32 rounded-full glass-panel flex items-center justify-center border-primary/20">
@@ -384,6 +397,46 @@
                 alert("Secure ID copied: " + cleanId);
             });
         }
+
+        let sidebarOpen = window.innerWidth >= 1024;
+        window.toggleSidebar = function() {
+            sidebarOpen = !sidebarOpen;
+            const sideNav = document.getElementById('side-nav');
+            const mainCanvas = document.getElementById('main-canvas');
+            const toggleIcon = document.getElementById('sidebarToggleIcon');
+
+            if (sidebarOpen) {
+                sideNav.classList.remove('-translate-x-full');
+                sideNav.classList.add('translate-x-0');
+                if (window.innerWidth >= 1024) {
+                    mainCanvas.classList.add('lg:ml-[320px]');
+                    mainCanvas.classList.remove('lg:ml-0');
+                }
+                toggleIcon.textContent = 'menu_open';
+            } else {
+                sideNav.classList.remove('translate-x-0');
+                sideNav.classList.add('-translate-x-full');
+                if (window.innerWidth >= 1024) {
+                    mainCanvas.classList.remove('lg:ml-[320px]');
+                    mainCanvas.classList.add('lg:ml-0');
+                }
+                toggleIcon.textContent = 'menu';
+            }
+        };
+
+        let qrExpanded = true;
+        window.toggleQR = function() {
+            qrExpanded = !qrExpanded;
+            const container = document.getElementById('qr-container');
+            const chevron = document.getElementById('qr-chevron');
+            if (qrExpanded) {
+                container.classList.remove('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                container.classList.add('hidden');
+                chevron.style.transform = 'rotate(-90deg)';
+            }
+        };
 
         window.logout = async function() {
             try {
