@@ -240,6 +240,16 @@
                 <h2 class="font-headline-lg text-on-surface">Encrypted Channel Idle</h2>
                 <p class="text-body-md text-on-surface-variant mt-xs">Select a verified contact to initiate a secure uplink</p>
             </div>
+            <div class="mt-lg w-full max-w-[320px] flex flex-col gap-sm">
+                <div class="h-px bg-white/10 w-full my-sm"></div>
+                <p class="text-label-sm uppercase tracking-widest text-outline text-center">Or Direct Secure Dial</p>
+                <div class="flex gap-base">
+                    <input type="text" id="directDialId" class="flex-1 bg-surface-container border border-white/10 rounded-lg py-2 px-3 text-on-surface text-sm glow-input" placeholder="Enter Secure ID (e.g. TABm...)">
+                    <button onclick="directDial()" class="bg-primary text-background font-bold px-4 py-2 rounded-lg text-sm hover:brightness-110 active:scale-95 transition-all">
+                        Dial
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- OUTGOING CALL STATE -->
@@ -311,8 +321,18 @@
         </div>
     </main>
 
-    <!-- UI & Signaling logic -->
-    <script>
+    <!-- UI & Signaling logic using Firebase Auth -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        // Fetch Firebase Config dynamically from server
+        const configRes = await fetch('/api/firebase-config');
+        const firebaseConfig = await configRes.json();
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
         const states = {
             IDLE: 'state-idle',
             OUTGOING: 'state-outgoing',
@@ -322,12 +342,15 @@
 
         let currentActiveState = states.IDLE;
         let callTimerInterval;
+        let socket;
 
         function switchState(newState) {
             Object.values(states).forEach(id => {
-                document.getElementById(id).classList.add('hidden-state');
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden-state');
             });
-            document.getElementById(newState).classList.remove('hidden-state');
+            const newEl = document.getElementById(newState);
+            if (newEl) newEl.classList.remove('hidden-state');
             currentActiveState = newState;
 
             if (newState === states.ACTIVE) {
@@ -354,7 +377,7 @@
             document.getElementById('call-timer').innerText = "00:00:00";
         }
 
-        function copyID() {
+        window.copyID = function() {
             const rawId = document.getElementById('myUserId').textContent;
             const cleanId = rawId.startsWith('@') ? rawId.substring(1) : rawId;
             navigator.clipboard.writeText(cleanId).then(() => {
@@ -362,9 +385,14 @@
             });
         }
 
-        function logout() {
-            localStorage.clear();
-            window.location.href = '/login.html';
+        window.logout = async function() {
+            try {
+                await signOut(auth);
+                localStorage.clear();
+                window.location.href = '/login.html';
+            } catch (err) {
+                console.error("Sign out failed:", err);
+            }
         }
 
         // --- DYNAMIC DATA AND WEBRTC LOGIC ---
@@ -379,11 +407,23 @@
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
 
+        // Helper to get fresh token and write it to localStorage
+        async function getFreshToken() {
+            const user = auth.currentUser;
+            if (!user) return null;
+            const freshToken = await user.getIdToken(true);
+            localStorage.setItem('token', freshToken);
+            return freshToken;
+        }
+
         // Load logged in user profile
         async function loadProfile() {
+            const freshToken = await getFreshToken();
+            if (!freshToken) return;
+
             try {
                 const res = await fetch('/api/profile', {
-                    headers: { 'Authorization': 'Bearer ' + token }
+                    headers: { 'Authorization': 'Bearer ' + freshToken }
                 });
                 
                 if (res.ok) {
@@ -404,7 +444,20 @@
                         colorLight : "#ffffff",
                         correctLevel : QRCode.CorrectLevel.H
                     });
-                } else {
+                } else if (res.status === 404) {
+                    console.log("Profile not found in local DB. Performing auto-registration...");
+                    const regRes = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idToken: freshToken })
+                    });
+                    if (regRes.ok) {
+                        await loadProfile();
+                    } else {
+                        console.error("Auto-registration failed.");
+                        logout();
+                    }
+                } else if (res.status === 401) {
                     logout();
                 }
             } catch (err) {
@@ -414,9 +467,12 @@
 
         // Load friends/contacts
         async function loadContacts() {
+            const freshToken = await getFreshToken();
+            if (!freshToken) return;
+
             try {
                 const res = await fetch('/api/contacts', {
-                    headers: { 'Authorization': 'Bearer ' + token }
+                    headers: { 'Authorization': 'Bearer ' + freshToken }
                 });
                 if (res.ok) {
                     contacts = await res.json();
@@ -429,6 +485,7 @@
 
         function renderContacts() {
             const listEl = document.getElementById('contactList');
+            if (!listEl) return;
             listEl.innerHTML = '';
             
             if (contacts.length === 0) {
@@ -468,16 +525,19 @@
         }
 
         // Add a contact friend
-        async function addFriend() {
+        window.addFriend = async function() {
             const targetUserId = prompt("Enter verified Secure ID to link:");
             if (!targetUserId) return;
             
+            const freshToken = await getFreshToken();
+            if (!freshToken) return;
+
             try {
                 const res = await fetch('/api/add-friend', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
+                        'Authorization': 'Bearer ' + freshToken
                     },
                     body: JSON.stringify({ targetUserId })
                 });
@@ -495,74 +555,19 @@
             }
         }
 
-        // Socket connection
-        const socket = io({
-            auth: { token }
-        });
-
-        socket.on('connect', () => {
-            console.log("Connected to secure signaling endpoint");
-        });
-
-        socket.on('user-status-change', ({ userId, online }) => {
-            const idx = contacts.findIndex(c => c.userId === userId);
-            if (idx !== -1) {
-                contacts[idx].online = online;
-                renderContacts();
-            }
-        });
-
-        // WebRTC Signaling Handlers
-        socket.on('incoming-call', async ({ fromUserId, offer }) => {
-            if (currentActiveState !== states.IDLE) {
-                socket.emit('reject-call', { toUserId: fromUserId });
+        window.directDial = function() {
+            const dialId = document.getElementById('directDialId').value.trim();
+            if (!dialId) {
+                alert("Please enter a Secure ID.");
                 return;
             }
-
-            activePeerUserId = fromUserId;
-            const contact = contacts.find(c => c.userId === fromUserId);
-            activePeerName = contact ? contact.displayName : fromUserId;
-            
-            document.getElementById('incoming-name').textContent = activePeerName;
-            document.getElementById('incoming-avatar').textContent = activePeerName.charAt(0).toUpperCase();
-            
-            switchState(states.INCOMING);
-            socket.incomingOffer = offer;
-        });
-
-        socket.on('call-accepted', async ({ fromUserId, answer }) => {
-            if (currentActiveState !== states.OUTGOING || fromUserId !== activePeerUserId) return;
-            
-            try {
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-                switchState(states.ACTIVE);
-            } catch (err) {
-                console.error(err);
-                endCall();
+            const myId = document.getElementById('myUserId').textContent.substring(1);
+            if (dialId === myId) {
+                alert("Cannot dial your own node.");
+                return;
             }
-        });
-
-        socket.on('call-rejected', ({ fromUserId }) => {
-            if (fromUserId === activePeerUserId) {
-                alert("Call declined by contact.");
-                endCall();
-            }
-        });
-
-        socket.on('call-ended', ({ fromUserId }) => {
-            if (fromUserId === activePeerUserId) {
-                endCall();
-            }
-        });
-
-        socket.on('ice-candidate', async ({ fromUserId, candidate }) => {
-            if (fromUserId !== activePeerUserId || !peerConnection) return;
-            try {
-                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-            } catch (err) {
-                console.error(err);
-            }
-        });
+            initiateCall(dialId, "Node " + dialId.substring(0, 6));
+        };
 
         // WebRTC functions
         async function initiateCall(targetUserId, displayName) {
@@ -604,7 +609,7 @@
             }
         }
 
-        async function acceptCall() {
+        window.acceptCall = async function() {
             if (!activePeerUserId || !socket.incomingOffer) return;
 
             try {
@@ -642,14 +647,14 @@
             }
         }
 
-        function declineCall() {
+        window.declineCall = function() {
             if (activePeerUserId) {
                 socket.emit('reject-call', { toUserId: activePeerUserId });
             }
             endCall();
         }
 
-        function endCall() {
+        window.endCall = function() {
             if (activePeerUserId) {
                 socket.emit('end-call', { toUserId: activePeerUserId });
             }
@@ -688,7 +693,7 @@
 
         // Toggle Audio/Video Track States
         let micEnabled = true;
-        function toggleMic() {
+        window.toggleMic = function() {
             if (!localStream) return;
             micEnabled = !micEnabled;
             localStream.getAudioTracks().forEach(t => t.enabled = micEnabled);
@@ -704,7 +709,7 @@
         }
 
         let camEnabled = true;
-        function toggleCamera() {
+        window.toggleCamera = function() {
             if (!localStream) return;
             camEnabled = !camEnabled;
             localStream.getVideoTracks().forEach(t => t.enabled = camEnabled);
@@ -720,7 +725,7 @@
         }
 
         // Screen Sharing Logic
-        async function toggleScreenShare() {
+        window.toggleScreenShare = async function() {
             if (!screenStream) {
                 try {
                     screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
@@ -761,10 +766,93 @@
             document.getElementById('share-btn').classList.remove('text-secondary');
         }
 
-        // Load data on window startup
-        window.addEventListener('DOMContentLoaded', () => {
-            loadProfile();
-            loadContacts();
+        // Init App and listen for Firebase Auth updates
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                localStorage.clear();
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Fresh token write
+            const token = await getFreshToken();
+
+            // Load profile details and contacts from server
+            await loadProfile();
+            await loadContacts();
+
+            // Connect signaling socket
+            socket = io({
+                auth: { token }
+            });
+
+            socket.on('connect', () => {
+                console.log("Connected to secure Firebase signaling endpoint");
+            });
+
+            socket.on('user-status-change', ({ userId, online }) => {
+                const idx = contacts.findIndex(c => c.userId === userId);
+                if (idx !== -1) {
+                    contacts[idx].online = online;
+                    renderContacts();
+                }
+            });
+
+            // WebRTC Signaling Handlers
+            socket.on('incoming-call', async ({ fromUserId, offer }) => {
+                if (currentActiveState !== states.IDLE) {
+                    socket.emit('reject-call', { toUserId: fromUserId });
+                    return;
+                }
+
+                activePeerUserId = fromUserId;
+                const contact = contacts.find(c => c.userId === fromUserId);
+                activePeerName = contact ? contact.displayName : fromUserId;
+                
+                document.getElementById('incoming-name').textContent = activePeerName;
+                document.getElementById('incoming-avatar').textContent = activePeerName.charAt(0).toUpperCase();
+                
+                switchState(states.INCOMING);
+                socket.incomingOffer = offer;
+            });
+
+            socket.on('call-accepted', async ({ fromUserId, answer }) => {
+                if (currentActiveState !== states.OUTGOING || fromUserId !== activePeerUserId) return;
+                
+                try {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                    switchState(states.ACTIVE);
+                } catch (err) {
+                    console.error(err);
+                    endCall();
+                }
+            });
+
+            socket.on('call-rejected', ({ fromUserId, reason }) => {
+                if (fromUserId === activePeerUserId) {
+                    if (reason === 'offline') {
+                        alert("Contact node is offline or unavailable.");
+                    } else {
+                        alert("Call declined by contact.");
+                    }
+                    endCall();
+                }
+            });
+
+            socket.on('call-ended', ({ fromUserId }) => {
+                if (fromUserId === activePeerUserId) {
+                    endCall();
+                }
+            });
+
+            socket.on('ice-candidate', async ({ fromUserId, candidate }) => {
+                if (fromUserId !== activePeerUserId || !peerConnection) return;
+                try {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                } catch (err) {
+                    console.error(err);
+                }
+            });
         });
     </script>
 </body>

@@ -91,35 +91,16 @@
                     <label class="text-xs uppercase tracking-wider text-outline" for="loginPassword">Cipher Key / Password</label>
                     <input type="password" id="loginPassword" required class="bg-background/80 border border-white/10 rounded-lg py-2.5 px-4 text-on-surface glow-input transition-all placeholder-••••••••" placeholder="••••••••">
                 </div>
-                <button type="submit" class="bg-primary-container text-white py-2.5 rounded-lg font-display font-semibold hover:brightness-110 active:scale-98 transition-all mt-2 shadow-lg shadow-primary-container/20">
+                <button type="submit" id="btnLoginSubmit" class="bg-primary-container text-white py-2.5 rounded-lg font-display font-semibold hover:brightness-110 active:scale-98 transition-all mt-2 shadow-lg shadow-primary-container/20">
                     Sign In to Node
                 </button>
             </form>
 
-            <!-- Register Form (OTP Step 1) -->
-            <form id="registerStep1" onsubmit="handleSendOTP(event)" class="hidden flex flex-col gap-4">
+            <!-- Register Form (Step 1: Account Creation) -->
+            <form id="registerStep1" onsubmit="handleRegisterStep1(event)" class="hidden flex flex-col gap-4">
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs uppercase tracking-wider text-outline" for="regEmail">Verification Email</label>
                     <input type="email" id="regEmail" required class="bg-background/80 border border-white/10 rounded-lg py-2.5 px-4 text-on-surface glow-input transition-all placeholder-white/20" placeholder="user@domain.com">
-                </div>
-                <button type="submit" id="btnSendOtp" class="bg-primary-container text-white py-2.5 rounded-lg font-display font-semibold hover:brightness-110 active:scale-98 transition-all mt-2">
-                    Send Verification OTP
-                </button>
-            </form>
-
-            <!-- Register Form (OTP Step 2) -->
-            <form id="registerStep2" onsubmit="handleRegister(event)" class="hidden flex flex-col gap-4">
-                <div class="bg-secondary/10 border border-secondary/20 p-3 rounded-lg text-secondary text-xs flex items-start gap-2">
-                    <span class="material-symbols-outlined text-[16px] mt-0.5">info</span>
-                    <span>An OTP has been dispatched to your email. Check your dev console or inbox to authorize this node.</span>
-                </div>
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-xs uppercase tracking-wider text-outline" for="regOtp">6-Digit OTP Code</label>
-                    <input type="text" id="regOtp" required class="bg-background/80 border border-white/10 rounded-lg py-2.5 px-4 text-on-surface glow-input transition-all placeholder-123456 text-center font-mono tracking-widest text-lg" placeholder="123456" maxlength="6" pattern="\d{6}">
-                </div>
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-xs uppercase tracking-wider text-outline" for="regDisplayName">Uplink Display Name</label>
-                    <input type="text" id="regDisplayName" required class="bg-background/80 border border-white/10 rounded-lg py-2.5 px-4 text-on-surface glow-input transition-all placeholder-e.g. Alex" placeholder="Alex">
                 </div>
                 <div class="flex flex-col gap-1.5">
                     <label class="text-xs uppercase tracking-wider text-outline" for="regPassword">Access Password</label>
@@ -129,23 +110,55 @@
                     <label class="text-xs uppercase tracking-wider text-outline" for="regConfirmPassword">Confirm Password</label>
                     <input type="password" id="regConfirmPassword" required class="bg-background/80 border border-white/10 rounded-lg py-2.5 px-4 text-on-surface glow-input transition-all placeholder-••••••••" placeholder="••••••••">
                 </div>
+                <button type="submit" id="btnRegisterSubmit1" class="bg-primary-container text-white py-2.5 rounded-lg font-display font-semibold hover:brightness-110 active:scale-98 transition-all mt-2">
+                    Create Profile & Send Link
+                </button>
+            </form>
+
+            <!-- Register Form (Step 2: Email Verification Check & Display Name) -->
+            <div id="registerStep2" class="hidden flex flex-col gap-4">
+                <div class="bg-secondary/10 border border-secondary/20 p-3 rounded-lg text-secondary text-xs flex items-start gap-2">
+                    <span class="material-symbols-outlined text-[16px] mt-0.5">info</span>
+                    <span>We sent a verification link to your email. Click the link in your inbox first, then fill in your display name and click verify.</span>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs uppercase tracking-wider text-outline" for="regDisplayName">Uplink Display Name</label>
+                    <input type="text" id="regDisplayName" required class="bg-background/80 border border-white/10 rounded-lg py-2.5 px-4 text-on-surface glow-input transition-all placeholder-e.g. Alex" placeholder="Alex" id="regDisplayName">
+                </div>
                 <div class="flex gap-2 mt-2">
                     <button type="button" onclick="resetRegisterFlow()" class="flex-1 py-2.5 rounded-lg border border-white/10 text-on-surface-variant hover:bg-white/5 transition-all text-sm font-semibold">
                         Back
                     </button>
-                    <button type="submit" class="flex-[2] bg-secondary text-background py-2.5 rounded-lg font-display font-bold hover:brightness-110 active:scale-98 transition-all text-sm">
-                        Create Node Profile
+                    <button type="button" onclick="handleVerifyAndCompleteRegistration()" id="btnRegisterSubmit2" class="flex-[2] bg-secondary text-background py-2.5 rounded-lg font-display font-bold hover:brightness-110 active:scale-98 transition-all text-sm">
+                        Verify & Authorize Node
                     </button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
-    <script>
-        let currentTab = 'login';
-        let verifiedEmail = '';
+    <!-- Firebase Auth Integration Module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            sendEmailVerification,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        function setTab(tab) {
+        // Fetch Firebase Config dynamically from server
+        const configRes = await fetch('/api/firebase-config');
+        const firebaseConfig = await configRes.json();
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        let currentTab = 'login';
+
+        window.setTab = function(tab) {
             currentTab = tab;
             const tabLoginBtn = document.getElementById('tabLoginBtn');
             const tabRegisterBtn = document.getElementById('tabRegisterBtn');
@@ -165,108 +178,175 @@
                 loginForm.classList.add('hidden');
                 resetRegisterFlow();
             }
-        }
+        };
 
-        function resetRegisterFlow() {
+        window.resetRegisterFlow = function() {
             document.getElementById('registerStep1').classList.remove('hidden');
             document.getElementById('registerStep2').classList.add('hidden');
             document.getElementById('regEmail').value = '';
-            document.getElementById('regOtp').value = '';
-            document.getElementById('regDisplayName').value = '';
             document.getElementById('regPassword').value = '';
             document.getElementById('regConfirmPassword').value = '';
-            verifiedEmail = '';
-        }
+            document.getElementById('regDisplayName').value = '';
+        };
 
-        async function handleLogin(e) {
+        // Sign In Flow
+        window.handleLogin = async function(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('btnLoginSubmit');
+            
+            btn.disabled = true;
+            btn.innerText = 'Connecting...';
 
             try {
-                const res = await fetch('/api/login', {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Reload user to fetch fresh emailVerified status
+                await user.reload();
+
+                if (!user.emailVerified) {
+                    await sendEmailVerification(user);
+                    alert("Your email is not verified yet. We have resent a verification link to your inbox. Please click it to sign in.");
+                    await signOut(auth);
+                    btn.disabled = false;
+                    btn.innerText = 'Sign In to Node';
+                    return;
+                }
+
+                const token = await user.getIdToken();
+                
+                // Let backend know they logged in and ensure they are registered in the DB
+                const regRes = await fetch('/api/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ idToken: token })
                 });
-                
-                const data = await res.json();
-                
-                if (res.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('userId', data.userId);
-                    localStorage.setItem('displayName', data.displayName);
-                    localStorage.setItem('email', email);
+
+                if (regRes.ok) {
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('userId', user.uid);
+                    localStorage.setItem('email', user.email);
                     window.location.href = '/';
                 } else {
-                    alert(data.error || 'Authentication failed. Please verify credentials.');
+                    const data = await regRes.json();
+                    alert(data.error || "Failed to initialize server-side profile.");
+                    await signOut(auth);
                 }
             } catch (err) {
                 console.error(err);
-                alert('Connection failure to local server node.');
-            }
-        }
-
-        async function handleSendOTP(e) {
-            e.preventDefault();
-            const email = document.getElementById('regEmail').value;
-            const btn = document.getElementById('btnSendOtp');
-            btn.disabled = true;
-            btn.innerText = 'Requesting...';
-
-            try {
-                const res = await fetch('/api/send-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-                
-                if (res.ok) {
-                    verifiedEmail = email;
-                    document.getElementById('registerStep1').classList.add('hidden');
-                    document.getElementById('registerStep2').classList.remove('hidden');
-                } else {
-                    alert('Failed to request verification code.');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Network connection error.');
+                alert("Authentication Failed: " + getReadableErrorMessage(err.code));
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'Send Verification OTP';
+                btn.innerText = 'Sign In to Node';
             }
-        }
+        };
 
-        async function handleRegister(e) {
+        // Register Step 1: Create Account & Send Verification Email
+        window.handleRegisterStep1 = async function(e) {
             e.preventDefault();
-            const code = document.getElementById('regOtp').value;
-            const displayName = document.getElementById('regDisplayName').value;
+            const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
             const confirmPassword = document.getElementById('regConfirmPassword').value;
+            const btn = document.getElementById('btnRegisterSubmit1');
 
             if (password !== confirmPassword) {
-                alert('Passwords do not match.');
+                alert("Passwords do not match.");
                 return;
             }
 
+            btn.disabled = true;
+            btn.innerText = 'Initializing Profile...';
+
             try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // Send verification link
+                await sendEmailVerification(user);
+                
+                // Advance UI to Step 2
+                document.getElementById('registerStep1').classList.add('hidden');
+                document.getElementById('registerStep2').classList.remove('hidden');
+            } catch (err) {
+                console.error(err);
+                alert("Registration Failed: " + getReadableErrorMessage(err.code));
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Create Profile & Send Link';
+            }
+        };
+
+        // Register Step 2: Confirm Verification Link Clicked
+        window.handleVerifyAndCompleteRegistration = async function() {
+            const displayName = document.getElementById('regDisplayName').value.trim();
+            const btn = document.getElementById('btnRegisterSubmit2');
+            const user = auth.currentUser;
+
+            if (!user) {
+                alert("Session lost. Please return to Step 1.");
+                resetRegisterFlow();
+                return;
+            }
+
+            if (!displayName) {
+                alert("Please select an Uplink Display Name.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'Verifying...';
+
+            try {
+                // Fetch fresh emailVerified status from Google
+                await user.reload();
+
+                if (!user.emailVerified) {
+                    alert("Uplink verification link not yet clicked. Please click the link in your email inbox and try again.");
+                    btn.disabled = false;
+                    btn.innerText = 'Verify & Authorize Node';
+                    return;
+                }
+
+                // Get Firebase ID Token
+                const token = await user.getIdToken();
+
+                // Send to backend database
                 const res = await fetch('/api/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: verifiedEmail, code, password, displayName })
+                    body: JSON.stringify({ idToken: token, displayName })
                 });
-                
-                const data = await res.json();
+
                 if (res.ok) {
-                    alert('Profile registration verified! You can now log in.');
-                    setTab('login');
-                    document.getElementById('loginEmail').value = verifiedEmail;
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('userId', user.uid);
+                    localStorage.setItem('email', user.email);
+                    localStorage.setItem('displayName', displayName);
+                    alert("Uplink established! Registration complete.");
+                    window.location.href = '/';
                 } else {
-                    alert(data.error || 'Registration failed.');
+                    const data = await res.json();
+                    alert(data.error || "Failed to register profile on database.");
                 }
             } catch (err) {
                 console.error(err);
-                alert('Verification process timed out.');
+                alert("Verification check failed.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Verify & Authorize Node';
+            }
+        };
+
+        function getReadableErrorMessage(code) {
+            switch(code) {
+                case 'auth/invalid-email': return 'Invalid email address.';
+                case 'auth/email-already-in-use': return 'An account already exists for this email.';
+                case 'auth/weak-password': return 'Password must be at least 6 characters.';
+                case 'auth/wrong-password': return 'Incorrect password.';
+                case 'auth/user-not-found': return 'Profile not found.';
+                default: return 'An error occurred during verification.';
             }
         }
     </script>
