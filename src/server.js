@@ -238,7 +238,11 @@ io.on('connection', (socket) => {
 
     socket.on('accept-call', ({ toUserId, answer }) => {
         const target = onlineUsers.get(toUserId);
-        if (target) io.to(target.socketId).emit('call-accepted', { fromUserId: socket.user.userId, answer });
+        if (target) {
+            io.to(target.socketId).emit('call-accepted', { fromUserId: socket.user.userId, answer });
+        } else {
+            socket.emit('call-ended', { fromUserId: toUserId });
+        }
     });
     
     socket.on('ice-candidate', ({ toUserId, candidate }) => {
