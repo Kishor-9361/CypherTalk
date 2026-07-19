@@ -153,8 +153,17 @@ app.post('/api/register', async (req, res) => {
             writeDB(db);
             res.status(201).json({ success: true, isNew: true });
         } else {
-            if (displayName && user.displayName !== displayName) {
-                user.displayName = displayName;
+            // Update details if this was a placeholder node
+            let modified = false;
+            if (!user.email || user.email === '') {
+                user.email = email;
+                modified = true;
+            }
+            if (!user.displayName || user.displayName.startsWith('Node ')) {
+                user.displayName = displayName || email.split('@')[0];
+                modified = true;
+            }
+            if (modified) {
                 writeDB(db);
             }
             res.json({ success: true, isNew: false });
@@ -193,9 +202,21 @@ app.post('/api/add-friend', authMiddleware, (req, res) => {
     const { targetUserId } = req.body;
     const db = readDB();
     const me = db.users.find(u => u.userId === req.user.userId);
-    const friend = db.users.find(u => u.userId === targetUserId);
+    let friend = db.users.find(u => u.userId === targetUserId);
     
-    if (!friend) return res.status(404).json({ error: 'User not found' });
+    if (!friend) {
+        // Create a placeholder user to allow linking before they log in (or if the database was reset)
+        friend = {
+            id: db.nextId++,
+            userId: targetUserId,
+            email: '',
+            displayName: 'Node ' + targetUserId.substring(0, 6),
+            contacts: []
+        };
+        db.users.push(friend);
+        writeDB(db);
+    }
+    
     if (me.userId === targetUserId) return res.status(400).json({ error: 'Cannot add yourself' });
     if (me.contacts.find(c => c.userId === targetUserId)) return res.status(409).json({ error: 'Already friend' });
     
