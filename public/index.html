@@ -171,6 +171,19 @@
             border-right-width: 0 !important;
             transform: translateX(-100%) !important;
         }
+        @media (max-width: 768px) {
+            .local-video {
+                bottom: 16px !important;
+                right: 16px !important;
+                width: 120px !important;
+                border-radius: 8px !important;
+            }
+            .control-bar {
+                gap: 8px !important;
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+            }
+        }
     </style>
 </head>
 <body class="h-screen w-screen flex font-body-md overflow-hidden">
@@ -184,7 +197,7 @@
     </script>
 
     <!-- Sidebar Section -->
-    <aside class="bg-surface-container-low/90 dark:bg-surface-container-low/90 backdrop-blur-xl border-r border-white/10 h-full w-[320px] flex-shrink-0 flex flex-col p-md gap-md fixed lg:relative left-0 top-0 z-40 transition-all duration-300 ease-in-out -translate-x-full lg:translate-x-0 overflow-hidden" id="side-nav">
+    <aside class="bg-surface-container-low/90 dark:bg-surface-container-low/90 backdrop-blur-xl border-r border-white/10 h-full w-[320px] flex-shrink-0 flex flex-col p-md gap-md fixed lg:relative left-0 top-0 z-40 transition-all duration-300 ease-in-out overflow-hidden" id="side-nav">
         <!-- Brand & User Identity -->
         <div class="flex flex-col gap-sm">
             <div class="flex justify-between items-center">
@@ -249,9 +262,9 @@
     </aside>
 
     <!-- Main Canvas Area -->
-    <main class="flex-1 w-full h-full relative flex flex-col items-center justify-center overflow-hidden transition-all duration-300 ease-in-out" id="main-canvas">
+    <main class="flex-1 w-full h-full relative flex flex-col items-center justify-center overflow-hidden transition-all duration-300 ease-in-out" id="main-canvas" onclick="closeSidebarIfMobile()">
         <!-- Floating Menu Toggle Button -->
-        <button id="sidebarToggleBtn" class="absolute top-md left-md z-50 p-sm glass-panel rounded-xl text-primary hover:bg-white/10 transition-colors flex items-center justify-center shadow-lg" onclick="toggleSidebar()">
+        <button id="sidebarToggleBtn" class="absolute top-md left-md z-50 p-sm glass-panel rounded-xl text-primary hover:bg-white/10 transition-colors flex items-center justify-center shadow-lg" onclick="event.stopPropagation(); toggleSidebar()">
             <span class="material-symbols-outlined" id="sidebarToggleIcon">menu_open</span>
         </button>
         <!-- IDLE STATE -->
@@ -327,7 +340,7 @@
             </div>
             
             <!-- Control Bar -->
-            <div class="absolute bottom-lg left-1/2 -translate-x-1/2 flex items-center gap-md px-md py-sm glass-panel rounded-full shadow-2xl">
+            <div class="absolute bottom-lg left-1/2 -translate-x-1/2 flex items-center gap-md px-md py-sm glass-panel rounded-full shadow-2xl control-bar">
                 <button class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface hover:bg-white/10 transition-colors" id="mic-btn" onclick="toggleMic()" title="Toggle Mic">
                     <span class="material-symbols-outlined" id="mic-icon">mic</span>
                 </button>
@@ -429,6 +442,12 @@
             } else {
                 sideNav.classList.add('collapsed');
                 toggleIcon.textContent = 'menu';
+            }
+        };
+
+        window.closeSidebarIfMobile = function() {
+            if (window.innerWidth < 1024 && sidebarOpen) {
+                toggleSidebar();
             }
         };
 
