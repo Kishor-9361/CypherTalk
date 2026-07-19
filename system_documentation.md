@@ -138,3 +138,32 @@ During an active session, users can control track streaming dynamically:
     2.  Locates the active WebRTC video sender track.
     3.  Replaces the webcam track with the screen track: `sender.replaceTrack(screenTrack)`.
     4.  Listens for `onended` events (when the user stops sharing) to swap back the webcam track automatically.
+
+---
+
+## 5. Media Encryption & Stream Security (SRTP, DTLS, E2EE)
+
+WebRTC enforces mandatory security protocols directly at the browser transport layer. Media streams (audio, video, and screen sharing) are fully encrypted and validated to prevent eavesdropping and tampering.
+
+### A. Secure Real-time Transport Protocol (SRTP)
+*   **Encrypted Packets**: All raw RTP packets (containing video frames and audio samples) are encrypted using **SRTP** before being sent over the network.
+*   **Cryptographic Strength**: WebRTC defaults to **AES-GCM (Advanced Encryption Standard with Galois/Counter Mode)** with 128-bit or 256-bit keys, ensuring both data confidentiality and packet integrity.
+
+### B. Datagram Transport Layer Security (DTLS)
+*   **Key Exchange**: The cryptographic keys used for SRTP encryption are **not** exchanged via the signaling server. Instead, they are dynamically negotiated directly between the two browser nodes using a **DTLS handshake** over the peer connection.
+*   **Perfect Forward Secrecy (PFS)**: DTLS generates unique, ephemeral session keys. If a key is compromised, it cannot be used to decrypt past or future calling sessions.
+
+### C. End-to-End Encryption (E2EE) Validation
+```
+[Alice Browser] <========= Direct P2P Tunnel (SRTP/DTLS) =========> [Bob Browser]
+       ^                                                                   ^
+       |                                                                   |
+       +----- Signaling Channel (WSS + Firebase JWT Auth) -----+           |
+                                |                              |           |
+                                v                              |           |
+                     [CypherTalk Server] ----------------------+-----------+
+                     (Relays Offers/Answers only;
+                      CANNOT view/decrypt media)
+```
+1.  **P2P Isolation**: Because the media stream flows directly between Alice and Bob (Peer-to-Peer), the CypherTalk server acts *only* as a signaling route. It has **no access** to the DTLS keys and **cannot decrypt** the media packets.
+2.  **STUN/TURN Transport Security**: Even when firewall restrictions require using a TURN relay server to route packets, the TURN server acts as a blind relay. Because SRTP is applied end-to-end (at the browser endpoints), the TURN server only forwards encrypted UDP payloads without access to the decryption keys.
