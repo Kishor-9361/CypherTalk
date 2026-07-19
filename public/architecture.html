@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>CypherTalk | Architecture Visualizer</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface": "#0f131d",
+                        "surface-container": "#1c1f2a",
+                        "background": "#0b0f19",
+                        "primary": "#b4c5ff",
+                        "primary-container": "#2563eb",
+                        "secondary": "#4edea3",
+                        "outline": "#8d90a0",
+                        "on-surface": "#dfe2f1",
+                        "on-surface-variant": "#c3c6d7",
+                        "error": "#ffb4ab",
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                        display: ["Outfit", "sans-serif"],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #dfe2f1;
+        }
+        .glass-panel {
+            background: rgba(23, 27, 38, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        /* Custom Animations */
+        .ping-fast {
+            animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+        .glow-active {
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
+            border-color: rgba(180, 197, 255, 0.5) !important;
+        }
+        /* Pulsing data line keyframes */
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -40;
+            }
+        }
+        .pulse-line {
+            stroke-dasharray: 8, 4;
+            animation: dash 1.5s linear infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen w-screen flex flex-col p-6 md:p-12 relative overflow-x-hidden font-sans">
+    
+    <!-- Ambient glow backdrops -->
+    <div class="absolute inset-0 pointer-events-none opacity-20">
+        <div class="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary-container/20 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-secondary/15 rounded-full blur-[120px]"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="max-w-7xl w-full mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 z-10">
+        <div>
+            <h1 class="font-display text-4xl font-bold tracking-tight text-primary mb-1">CypherTalk Architecture</h1>
+            <p class="text-on-surface-variant text-sm flex items-center gap-1">
+                <span class="material-symbols-outlined text-[18px] text-secondary">insights</span>
+                Interactive Security Validation & WebRTC Signaling Lifecycle Visualizer
+            </p>
+        </div>
+        <a href="/" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-on-surface text-sm transition-all font-semibold shadow-lg">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            Back to Dashboard
+        </a>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 z-10 flex-1">
+        
+        <!-- Navigation Sidebar (Steps) -->
+        <section class="lg:col-span-4 flex flex-col gap-4">
+            <div class="glass-panel p-6 rounded-2xl flex flex-col gap-4">
+                <h3 class="font-display text-lg font-bold text-on-surface uppercase tracking-wider text-outline mb-2">Lifecycle Phases</h3>
+                
+                <!-- Step 1 Button -->
+                <button onclick="selectPhase(1)" id="phase-btn-1" class="w-full text-left p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all flex gap-4 items-start relative overflow-hidden group glow-active">
+                    <div class="w-8 h-8 rounded-lg bg-primary/20 text-primary font-bold font-display flex items-center justify-center border border-primary/30 shrink-0">1</div>
+                    <div>
+                        <h4 class="font-display font-semibold text-on-surface group-hover:text-primary transition-colors text-sm">Auth & Node Verification</h4>
+                        <p class="text-xs text-outline mt-1">Firebase verification link & Dynamic JWK validator</p>
+                    </div>
+                </button>
+
+                <!-- Step 2 Button -->
+                <button onclick="selectPhase(2)" id="phase-btn-2" class="w-full text-left p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all flex gap-4 items-start relative overflow-hidden group">
+                    <div class="w-8 h-8 rounded-lg bg-white/10 text-outline font-bold font-display flex items-center justify-center border border-white/10 shrink-0">2</div>
+                    <div>
+                        <h4 class="font-display font-semibold text-on-surface group-hover:text-primary transition-colors text-sm">Signaling Channel Handshake</h4>
+                        <p class="text-xs text-outline mt-1">Socket.io token validation & online status broadcast</p>
+                    </div>
+                </button>
+
+                <!-- Step 3 Button -->
+                <button onclick="selectPhase(3)" id="phase-btn-3" class="w-full text-left p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all flex gap-4 items-start relative overflow-hidden group">
+                    <div class="w-8 h-8 rounded-lg bg-white/10 text-outline font-bold font-display flex items-center justify-center border border-white/10 shrink-0">3</div>
+                    <div>
+                        <h4 class="font-display font-semibold text-on-surface group-hover:text-primary transition-colors text-sm">WebRTC Signaling Exchange</h4>
+                        <p class="text-xs text-outline mt-1">SDP Offer/Answer negotiation & offline interceptors</p>
+                    </div>
+                </button>
+
+                <!-- Step 4 Button -->
+                <button onclick="selectPhase(4)" id="phase-btn-4" class="w-full text-left p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all flex gap-4 items-start relative overflow-hidden group">
+                    <div class="w-8 h-8 rounded-lg bg-white/10 text-outline font-bold font-display flex items-center justify-center border border-white/10 shrink-0">4</div>
+                    <div>
+                        <h4 class="font-display font-semibold text-on-surface group-hover:text-primary transition-colors text-sm">P2P Secure Media Tunnel</h4>
+                        <p class="text-xs text-outline mt-1">SRTP media encryption, DTLS keys, E2EE validation</p>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <!-- Visualization Sandbox -->
+        <section class="lg:col-span-8 flex flex-col gap-6">
+            
+            <!-- Graphic Canvas -->
+            <div class="glass-panel w-full aspect-[16/9] rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
+                <!-- Background Grid -->
+                <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:30px_30px] opacity-30"></div>
+                
+                <!-- Interactive Nodes Grid -->
+                <div class="relative w-full h-full flex items-center justify-between px-6 z-10">
+                    
+                    <!-- Left Node (Alice Client) -->
+                    <div id="node-alice" class="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-container border border-white/10 w-36 transition-all duration-300 relative">
+                        <div class="w-12 h-12 rounded-full bg-primary-container/20 border border-primary/40 flex items-center justify-center text-primary font-bold font-display">A</div>
+                        <span class="text-xs font-semibold">Client (Alice)</span>
+                        <div class="text-[10px] text-outline px-2 py-0.5 rounded bg-black/30 border border-white/5 font-mono">192.168.1.5</div>
+                    </div>
+
+                    <!-- Center System (Firebase / Server / Certificates) -->
+                    <div class="flex flex-col gap-8 justify-center items-center h-full relative">
+                        
+                        <!-- Top Center Node (Firebase Auth) -->
+                        <div id="node-firebase" class="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-container border border-white/10 w-36 transition-all duration-300 relative">
+                            <div class="w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-500">
+                                <span class="material-symbols-outlined">security</span>
+                            </div>
+                            <span class="text-xs font-semibold text-orange-500">Firebase Auth</span>
+                        </div>
+
+                        <!-- Mid Center Node (CypherTalk Backend) -->
+                        <div id="node-server" class="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-container border border-white/10 w-36 transition-all duration-300 relative">
+                            <div class="w-12 h-12 rounded-full bg-secondary/10 border border-secondary/30 flex items-center justify-center text-secondary">
+                                <span class="material-symbols-outlined">dns</span>
+                            </div>
+                            <span class="text-xs font-semibold text-secondary">CypherTalk Server</span>
+                        </div>
+
+                        <!-- Bottom Center Node (Google Certificates) -->
+                        <div id="node-google" class="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-container border border-white/10 w-36 transition-all duration-300 relative opacity-60">
+                            <div class="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-500">
+                                <span class="material-symbols-outlined">vpn_key</span>
+                            </div>
+                            <span class="text-xs font-semibold text-blue-500">Google Certs API</span>
+                        </div>
+                    </div>
+
+                    <!-- Right Node (Bob Client) -->
+                    <div id="node-bob" class="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-container border border-white/10 w-36 transition-all duration-300 relative">
+                        <div class="w-12 h-12 rounded-full bg-secondary/20 border border-secondary/40 flex items-center justify-center text-secondary font-bold font-display">B</div>
+                        <span class="text-xs font-semibold">Client (Bob)</span>
+                        <div class="text-[10px] text-outline px-2 py-0.5 rounded bg-black/30 border border-white/5 font-mono">192.168.1.10</div>
+                    </div>
+
+                    <!-- Animated Data Stream Overlay -->
+                    <svg class="absolute inset-0 w-full h-full pointer-events-none" id="stream-lines">
+                        <!-- Stream Alice -> Firebase -->
+                        <path id="line-alice-firebase" d="M 120 120 Q 220 80 320 80" fill="none" stroke="transparent" stroke-width="2" />
+                        <circle id="dot-alice-firebase" r="4" fill="#f97316" class="hidden"/>
+
+                        <!-- Stream Alice -> Server -->
+                        <path id="line-alice-server" d="M 120 190 L 320 190" fill="none" stroke="transparent" stroke-width="2"/>
+                        <circle id="dot-alice-server" r="4" fill="#b4c5ff" class="hidden"/>
+
+                        <!-- Stream Server -> Google Certs -->
+                        <path id="line-server-google" d="M 380 230 L 380 290" fill="none" stroke="transparent" stroke-width="2"/>
+                        <circle id="dot-server-google" r="4" fill="#3b82f6" class="hidden"/>
+
+                        <!-- Stream Bob -> Server -->
+                        <path id="line-bob-server" d="M 640 190 L 440 190" fill="none" stroke="transparent" stroke-width="2"/>
+                        <circle id="dot-bob-server" r="4" fill="#4edea3" class="hidden"/>
+
+                        <!-- Stream Direct P2P Tunnel -->
+                        <path id="line-p2p" d="M 120 220 Q 380 340 640 220" fill="none" stroke="transparent" stroke-width="3"/>
+                        <circle id="dot-p2p" r="5" fill="#10b981" class="hidden"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Detailed Explanation Card -->
+            <div class="glass-panel p-6 rounded-2xl flex flex-col gap-4 min-h-[220px]">
+                <div class="flex items-center gap-2 border-b border-white/10 pb-3">
+                    <span class="material-symbols-outlined text-primary" id="detail-icon">verified_user</span>
+                    <h3 class="font-display text-lg font-bold text-on-surface" id="detail-title">Phase 1: Node Registration & Verification</h3>
+                </div>
+                <div class="text-sm text-on-surface-variant leading-relaxed" id="detail-body">
+                    Loading description...
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-white/5 pt-4 text-xs">
+                    <div>
+                        <span class="text-outline block uppercase tracking-wider text-[10px] mb-1">Key Files</span>
+                        <code class="text-primary font-mono" id="detail-files">public/login.html, server.js</code>
+                    </div>
+                    <div>
+                        <span class="text-outline block uppercase tracking-wider text-[10px] mb-1">Protocols & Specs</span>
+                        <code class="text-secondary font-mono" id="detail-protocols">JWT, RS256, HTTP POST</code>
+                    </div>
+                    <div>
+                        <span class="text-outline block uppercase tracking-wider text-[10px] mb-1">Validation Action</span>
+                        <code class="text-orange-400 font-mono" id="detail-validation">Google Cert Signature Fetch</code>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Interactive JS Controller -->
+    <script>
+        const phases = {
+            1: {
+                title: "Phase 1: Node Registration & Verification",
+                icon: "verified_user",
+                files: "login.html, server.js, data.json",
+                protocols: "JWT (RS256), HTTPS POST",
+                validation: "Fetch Google JWKs & check signatures",
+                body: "Alice registers via Email & Password. Firebase Auth dispatches a verification link to her Gmail. Once Alice clicks the link, the frontend retrieves a Firebase ID Token (JWT) and submits it to `/api/register`. The Node server fetches Google's public signing certificates dynamically, validates Alice's token signature, matches the audience (`cyphertalk-195d6`), extracts her `uid`, and registers her node in `data.json`.",
+                setupGraphics: () => {
+                    // Activate/deactivate nodes
+                    setNodeActive('node-alice', true);
+                    setNodeActive('node-firebase', true);
+                    setNodeActive('node-server', true);
+                    setNodeActive('node-google', true);
+                    setNodeActive('node-bob', false);
+
+                    // Setup data path links
+                    showPath('line-alice-firebase', '#f97316');
+                    showPath('line-alice-server', '#b4c5ff');
+                    showPath('line-server-google', '#3b82f6');
+                    hidePath('line-bob-server');
+                    hidePath('line-p2p');
+
+                    // Run animated dots
+                    animateDot('dot-alice-firebase', 'line-alice-firebase');
+                    setTimeout(() => animateDot('dot-alice-server', 'line-alice-server'), 1000);
+                    setTimeout(() => animateDot('dot-server-google', 'line-server-google'), 2000);
+                }
+            },
+            2: {
+                title: "Phase 2: Signaling Channel Handshake",
+                icon: "settings_input_antenna",
+                files: "server.js, index.html",
+                protocols: "WebSockets, Socket.io, JWT",
+                validation: "Validate Firebase Token during Connection",
+                body: "Alice opens the secure console index.html. Firebase validates her login, and Socket.io initiates a WebSocket connection to CypherTalk server, passing her fresh ID Token in the handshake payload. The server's socket authentication middleware intercepts the connection, validates the token using the Google certificates verifier, extracts the user `userId`, maps it to the active socket ID, and broadcasts a `'user-status-change'` event. Bob's client receives the socket notification and updates Alice's status indicator to green (Available Now).",
+                setupGraphics: () => {
+                    setNodeActive('node-alice', true);
+                    setNodeActive('node-firebase', false);
+                    setNodeActive('node-server', true);
+                    setNodeActive('node-google', false);
+                    setNodeActive('node-bob', true);
+
+                    hidePath('line-alice-firebase');
+                    showPath('line-alice-server', '#b4c5ff');
+                    hidePath('line-server-google');
+                    showPath('line-bob-server', '#4edea3');
+                    hidePath('line-p2p');
+
+                    animateDot('dot-alice-server', 'line-alice-server');
+                    setTimeout(() => animateDot('dot-bob-server', 'line-bob-server'), 1200);
+                }
+            },
+            3: {
+                title: "Phase 3: WebRTC Signaling Exchange",
+                icon: "swap_calls",
+                files: "server.js, index.html",
+                protocols: "SDP, ICE Candidates, WebSockets",
+                validation: "Online verification & Busy State Interceptors",
+                body: "Alice dials Bob. Her browser opens local audio/video hardware streams and creates a WebRTC SDP Offer. The offer is emitted over the Socket.io channel (`call-user`). The server intercepts it, verifies that Bob is online and not already in an active call, and relays the offer to Bob. Bob's browser receives the offer, prompts him, and on acceptance, replies with an SDP Answer relayed back to Alice. Both browsers then exchange ICE Candidates (network routes) via the server to establish direct connection pathways.",
+                setupGraphics: () => {
+                    setNodeActive('node-alice', true);
+                    setNodeActive('node-firebase', false);
+                    setNodeActive('node-server', true);
+                    setNodeActive('node-google', false);
+                    setNodeActive('node-bob', true);
+
+                    hidePath('line-alice-firebase');
+                    showPath('line-alice-server', '#b4c5ff');
+                    hidePath('line-server-google');
+                    showPath('line-bob-server', '#4edea3');
+                    hidePath('line-p2p');
+
+                    animateDot('dot-alice-server', 'line-alice-server');
+                    setTimeout(() => animateDot('dot-bob-server', 'line-bob-server'), 1000);
+                }
+            },
+            4: {
+                title: "Phase 4: P2P Secure Media Tunnel",
+                icon: "shield_lock",
+                files: "index.html",
+                protocols: "SRTP, DTLS, AES-GCM, P2P",
+                validation: "DTLS Ephemeral Key Exchange Handshake",
+                body: "Once routing pathways are negotiated, Alice's and Bob's browsers directly execute a DTLS handshake over their peer-to-peer connection to negotiate transient encryption keys. All audio, video, and screen sharing tracks are encrypted using SRTP (AES-GCM 128/256-bit). The media stream flows directly peer-to-peer. The CypherTalk server plays **no part** in routing the media, has no access to the DTLS keys, and cannot inspect or record the decrypted stream, satisfying End-to-End Encryption (E2EE) standards.",
+                setupGraphics: () => {
+                    setNodeActive('node-alice', true);
+                    setNodeActive('node-firebase', false);
+                    setNodeActive('node-server', false);
+                    setNodeActive('node-google', false);
+                    setNodeActive('node-bob', true);
+
+                    hidePath('line-alice-firebase');
+                    hidePath('line-alice-server');
+                    hidePath('line-server-google');
+                    hidePath('line-bob-server');
+                    showPath('line-p2p', '#10b981');
+
+                    animateDot('dot-p2p', 'line-p2p');
+                }
+            }
+        };
+
+        let activePhase = 1;
+        let animationInterval;
+
+        function setNodeActive(id, active) {
+            const el = document.getElementById(id);
+            if (active) {
+                el.classList.remove('opacity-60', 'scale-95');
+                el.classList.add('opacity-100', 'scale-100', 'glow-active');
+            } else {
+                el.classList.add('opacity-60', 'scale-95');
+                el.classList.remove('opacity-100', 'scale-100', 'glow-active');
+            }
+        }
+
+        function showPath(id, color) {
+            const el = document.getElementById(id);
+            el.setAttribute('stroke', color);
+            el.classList.add('pulse-line');
+        }
+
+        function hidePath(id) {
+            const el = document.getElementById(id);
+            el.setAttribute('stroke', 'transparent');
+            el.classList.remove('pulse-line');
+        }
+
+        function animateDot(dotId, pathId) {
+            const dot = document.getElementById(dotId);
+            const path = document.getElementById(pathId);
+            if (!dot || !path) return;
+
+            dot.classList.remove('hidden');
+            const pathLength = path.getTotalLength();
+            let start = null;
+
+            function step(timestamp) {
+                if (!start) start = timestamp;
+                const progress = (timestamp - start) / 1200; // Animation duration
+                if (progress < 1) {
+                    const point = path.getPointAtLength(progress * pathLength);
+                    dot.setAttribute('cx', point.x);
+                    dot.setAttribute('cy', point.y);
+                    window.requestAnimationFrame(step);
+                } else {
+                    dot.classList.add('hidden');
+                }
+            }
+            window.requestAnimationFrame(step);
+        }
+
+        function selectPhase(phaseNum) {
+            activePhase = phaseNum;
+
+            // Update sidebar buttons styling
+            for (let i = 1; i <= 4; i++) {
+                const btn = document.getElementById(`phase-btn-${i}`);
+                const counter = btn.querySelector('div');
+                if (i === phaseNum) {
+                    btn.classList.add('glow-active', 'bg-white/10');
+                    counter.classList.add('bg-primary/20', 'text-primary');
+                    counter.classList.remove('bg-white/10', 'text-outline');
+                } else {
+                    btn.classList.remove('glow-active', 'bg-white/10');
+                    counter.classList.remove('bg-primary/20', 'text-primary');
+                    counter.classList.add('bg-white/10', 'text-outline');
+                }
+            }
+
+            // Update description panel
+            const data = phases[phaseNum];
+            document.getElementById('detail-icon').textContent = data.icon;
+            document.getElementById('detail-title').textContent = data.title;
+            document.getElementById('detail-body').textContent = data.body;
+            document.getElementById('detail-files').textContent = data.files;
+            document.getElementById('detail-protocols').textContent = data.protocols;
+            document.getElementById('detail-validation').textContent = data.validation;
+
+            // Trigger graphics & animations
+            clearInterval(animationInterval);
+            data.setupGraphics();
+            
+            // Loop the animations every 3 seconds
+            animationInterval = setInterval(() => {
+                data.setupGraphics();
+            }, 3500);
+        }
+
+        // Initialize Phase 1 on Load
+        window.addEventListener('DOMContentLoaded', () => {
+            selectPhase(1);
+        });
+    </script>
+</body>
+</html>
