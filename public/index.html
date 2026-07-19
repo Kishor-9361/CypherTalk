@@ -214,8 +214,11 @@
                 </button>
             </div>
             <div class="glass-panel p-sm rounded-xl flex items-center gap-sm">
-                <div class="w-12 h-12 rounded-full overflow-hidden border border-primary/30 flex items-center justify-center bg-primary-container/20 text-primary font-bold text-lg font-display" id="myAvatar">
-                    U
+                <div class="relative">
+                    <div class="w-12 h-12 rounded-full overflow-hidden border border-primary/30 flex items-center justify-center bg-primary-container/20 text-primary font-bold text-lg font-display" id="myAvatar">
+                        U
+                    </div>
+                    <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-surface-container-low bg-outline" id="myStatusDot" title="Signaling Disconnected"></span>
                 </div>
                 <div class="flex-1 overflow-hidden">
                     <p class="font-headline-md text-label-md text-on-surface truncate" id="myDisplayName">Loading...</p>
@@ -484,6 +487,7 @@
         let peerConnection;
         let activePeerUserId = null;
         let activePeerName = null;
+        let iceCandidatesQueue = [];
 
         const rtcConfig = {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
@@ -715,6 +719,17 @@
                 };
 
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(socket.incomingOffer));
+                
+                // Flush queued remote ICE candidates
+                for (const candidate of iceCandidatesQueue) {
+                    try {
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    } catch (cErr) {
+                        console.error("Failed to add queued candidate:", cErr);
+                    }
+                }
+                iceCandidatesQueue = [];
+
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
 
@@ -740,6 +755,8 @@
             if (activePeerUserId) {
                 socket.emit('end-call', { toUserId: activePeerUserId });
             }
+
+            iceCandidatesQueue = [];
 
             if (localStream) {
                 localStream.getTracks().forEach(t => t.stop());
@@ -870,6 +887,36 @@
 
             socket.on('connect', () => {
                 console.log("Connected to secure Firebase signaling endpoint");
+                const dot = document.getElementById('myStatusDot');
+                if (dot) {
+                    dot.className = "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-surface-container-low bg-secondary pulse-emerald";
+                    dot.title = "Signaling Connected";
+                }
+            });
+
+            socket.on('connect_error', async (err) => {
+                console.error("Signaling connection error:", err.message);
+                const dot = document.getElementById('myStatusDot');
+                if (dot) {
+                    dot.className = "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-surface-container-low bg-error";
+                    dot.title = "Signaling Disconnected: " + err.message;
+                }
+                // Auto refresh token and reconnect if unauthorized or failed
+                if (err.message === 'Unauthorized' || err.message === 'xhr poll error') {
+                    const freshToken = await getFreshToken();
+                    if (freshToken) {
+                        socket.auth.token = freshToken;
+                        socket.connect();
+                    }
+                }
+            });
+
+            socket.on('disconnect', () => {
+                const dot = document.getElementById('myStatusDot');
+                if (dot) {
+                    dot.className = "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-surface-container-low bg-outline";
+                    dot.title = "Signaling Disconnected";
+                }
             });
 
             socket.on('user-status-change', ({ userId, online }) => {
@@ -903,6 +950,17 @@
                 
                 try {
                     await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                    
+                    // Flush queued remote ICE candidates
+                    for (const candidate of iceCandidatesQueue) {
+                        try {
+                            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                        } catch (cErr) {
+                            console.error("Failed to add queued candidate:", cErr);
+                        }
+                    }
+                    iceCandidatesQueue = [];
+                    
                     switchState(states.ACTIVE);
                 } catch (err) {
                     console.error(err);
@@ -930,9 +988,13 @@
             socket.on('ice-candidate', async ({ fromUserId, candidate }) => {
                 if (fromUserId !== activePeerUserId || !peerConnection) return;
                 try {
-                    await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    } else {
+                        iceCandidatesQueue.push(candidate);
+                    }
                 } catch (err) {
-                    console.error(err);
+                    console.error("Error adding remote ICE candidate:", err);
                 }
             });
         });
