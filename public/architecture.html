@@ -42,15 +42,10 @@
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        /* Custom Animations */
-        .ping-fast {
-            animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
         .glow-active {
             box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
             border-color: rgba(180, 197, 255, 0.5) !important;
         }
-        /* Pulsing data line keyframes */
         @keyframes dash {
             to {
                 stroke-dashoffset: -40;
@@ -60,9 +55,13 @@
             stroke-dasharray: 8, 4;
             animation: dash 1.5s linear infinite;
         }
+        .step-dot.active {
+            background-color: #b4c5ff;
+            box-shadow: 0 0 8px #b4c5ff;
+        }
     </style>
 </head>
-<body class="min-h-screen w-screen flex flex-col p-6 md:p-12 relative overflow-x-hidden font-sans">
+<body class="min-h-screen w-screen flex flex-col p-4 md:p-8 relative overflow-x-hidden font-sans">
     
     <!-- Ambient glow backdrops -->
     <div class="absolute inset-0 pointer-events-none opacity-20">
@@ -71,12 +70,12 @@
     </div>
 
     <!-- Header -->
-    <header class="max-w-7xl w-full mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 z-10">
+    <header class="max-w-7xl w-full mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 z-10">
         <div>
-            <h1 class="font-display text-4xl font-bold tracking-tight text-primary mb-1">CypherTalk Architecture</h1>
+            <h1 class="font-display text-3xl font-bold tracking-tight text-primary mb-1">CypherTalk Architecture</h1>
             <p class="text-on-surface-variant text-sm flex items-center gap-1">
                 <span class="material-symbols-outlined text-[18px] text-secondary">insights</span>
-                Interactive Security Validation & WebRTC Signaling Lifecycle Visualizer
+                Step-by-Step Event & Protocol Visualizer
             </p>
         </div>
         <a href="/" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-on-surface text-sm transition-all font-semibold shadow-lg">
@@ -86,56 +85,75 @@
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 z-10 flex-1">
+    <main class="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 z-10 flex-1">
         
         <!-- Navigation Sidebar (Steps) -->
         <section class="lg:col-span-4 flex flex-col gap-4">
-            <div class="glass-panel p-6 rounded-2xl flex flex-col gap-4">
-                <h3 class="font-display text-lg font-bold text-on-surface uppercase tracking-wider text-outline mb-2">Lifecycle Phases</h3>
+            <div class="glass-panel p-5 rounded-2xl flex flex-col gap-3">
+                <h3 class="font-display text-sm font-bold text-outline uppercase tracking-widest mb-1">Lifecycle Phases</h3>
                 
                 <!-- Step 1 Button -->
-                <button onclick="selectPhase(1)" id="phase-btn-1" class="w-full text-left p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all flex gap-4 items-start relative overflow-hidden group glow-active">
-                    <div class="w-8 h-8 rounded-lg bg-primary/20 text-primary font-bold font-display flex items-center justify-center border border-primary/30 shrink-0">1</div>
+                <button onclick="selectPhase(1)" id="phase-btn-1" class="w-full text-left p-3.5 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all flex gap-3.5 items-start relative overflow-hidden group glow-active">
+                    <div class="w-7 h-7 rounded-lg bg-primary/20 text-primary font-bold font-display flex items-center justify-center border border-primary/30 shrink-0 text-sm">1</div>
                     <div>
-                        <h4 class="font-display font-semibold text-on-surface group-hover:text-primary transition-colors text-sm">Auth & Node Verification</h4>
-                        <p class="text-xs text-outline mt-1">Firebase verification link & Dynamic JWK validator</p>
+                        <h4 class="font-display font-semibold text-on-surface group-hover:text-primary transition-colors text-sm">Auth & Registration</h4>
+                        <p class="text-[11px] text-outline">Firebase validation & JWK signature verify</p>
                     </div>
                 </button>
 
                 <!-- Step 2 Button -->
-                <button onclick="selectPhase(2)" id="phase-btn-2" class="w-full text-left p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all flex gap-4 items-start relative overflow-hidden group">
-                    <div class="w-8 h-8 rounded-lg bg-white/10 text-outline font-bold font-display flex items-center justify-center border border-white/10 shrink-0">2</div>
+                <button onclick="selectPhase(2)" id="phase-btn-2" class="w-full text-left p-3.5 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all flex gap-3.5 items-start relative overflow-hidden group">
+                    <div class="w-7 h-7 rounded-lg bg-white/10 text-outline font-bold font-display flex items-center justify-center border border-white/10 shrink-0 text-sm">2</div>
                     <div>
-                        <h4 class="font-display font-semibold text-on-surface group-hover:text-primary transition-colors text-sm">Signaling Channel Handshake</h4>
-                        <p class="text-xs text-outline mt-1">Socket.io token validation & online status broadcast</p>
+                        <h4 class="font-display font-semibold text-on-surface group-hover:text-primary transition-colors text-sm">Signaling Connection</h4>
+                        <p class="text-[11px] text-outline">Socket handshake & presence mapping</p>
                     </div>
                 </button>
 
                 <!-- Step 3 Button -->
-                <button onclick="selectPhase(3)" id="phase-btn-3" class="w-full text-left p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all flex gap-4 items-start relative overflow-hidden group">
-                    <div class="w-8 h-8 rounded-lg bg-white/10 text-outline font-bold font-display flex items-center justify-center border border-white/10 shrink-0">3</div>
+                <button onclick="selectPhase(3)" id="phase-btn-3" class="w-full text-left p-3.5 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all flex gap-3.5 items-start relative overflow-hidden group">
+                    <div class="w-7 h-7 rounded-lg bg-white/10 text-outline font-bold font-display flex items-center justify-center border border-white/10 shrink-0 text-sm">3</div>
                     <div>
-                        <h4 class="font-display font-semibold text-on-surface group-hover:text-primary transition-colors text-sm">WebRTC Signaling Exchange</h4>
-                        <p class="text-xs text-outline mt-1">SDP Offer/Answer negotiation & offline interceptors</p>
+                        <h4 class="font-display font-semibold text-on-surface group-hover:text-primary transition-colors text-sm">WebRTC Negotiation</h4>
+                        <p class="text-[11px] text-outline">SDP Offer/Answer & offline safety gates</p>
                     </div>
                 </button>
 
                 <!-- Step 4 Button -->
-                <button onclick="selectPhase(4)" id="phase-btn-4" class="w-full text-left p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all flex gap-4 items-start relative overflow-hidden group">
-                    <div class="w-8 h-8 rounded-lg bg-white/10 text-outline font-bold font-display flex items-center justify-center border border-white/10 shrink-0">4</div>
+                <button onclick="selectPhase(4)" id="phase-btn-4" class="w-full text-left p-3.5 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all flex gap-3.5 items-start relative overflow-hidden group">
+                    <div class="w-7 h-7 rounded-lg bg-white/10 text-outline font-bold font-display flex items-center justify-center border border-white/10 shrink-0 text-sm">4</div>
                     <div>
-                        <h4 class="font-display font-semibold text-on-surface group-hover:text-primary transition-colors text-sm">P2P Secure Media Tunnel</h4>
-                        <p class="text-xs text-outline mt-1">SRTP media encryption, DTLS keys, E2EE validation</p>
+                        <h4 class="font-display font-semibold text-on-surface group-hover:text-primary transition-colors text-sm">E2EE Media Tunnel</h4>
+                        <p class="text-[11px] text-outline">DTLS handshake & SRTP AES-GCM stream</p>
                     </div>
                 </button>
+            </div>
+            
+            <!-- Codebase Organization Map -->
+            <div class="glass-panel p-5 rounded-2xl flex flex-col gap-3">
+                <h3 class="font-display text-sm font-bold text-outline uppercase tracking-widest mb-1">Codebase Architecture</h3>
+                <div class="space-y-2 text-xs">
+                    <div class="p-2.5 rounded-lg bg-white/5 border border-white/5 flex flex-col gap-1">
+                        <span class="font-mono text-primary font-semibold">server.js</span>
+                        <p class="text-outline text-[11px]">Handles Google Certs caching, Firebase JWT decoding, Socket.io signaling channel, presence tracking & offline gates.</p>
+                    </div>
+                    <div class="p-2.5 rounded-lg bg-white/5 border border-white/5 flex flex-col gap-1">
+                        <span class="font-mono text-secondary font-semibold">public/index.html</span>
+                        <p class="text-outline text-[11px]">Desktop & mobile Obsidian Nebula calling board, WebRTC RTCConnection wrapper, and device track toggling.</p>
+                    </div>
+                    <div class="p-2.5 rounded-lg bg-white/5 border border-white/5 flex flex-col gap-1">
+                        <span class="font-mono text-orange-400 font-semibold">public/login.html</span>
+                        <p class="text-outline text-[11px]">Initializes client-side Firebase Auth SDK & verification link flows.</p>
+                    </div>
+                </div>
             </div>
         </section>
 
         <!-- Visualization Sandbox -->
-        <section class="lg:col-span-8 flex flex-col gap-6">
+        <section class="lg:col-span-8 flex flex-col gap-4">
             
             <!-- Graphic Canvas -->
-            <div class="glass-panel w-full aspect-[16/9] rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
+            <div class="glass-panel w-full aspect-[16/9] rounded-2xl p-5 flex flex-col items-center justify-center relative overflow-hidden">
                 <!-- Background Grid -->
                 <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:30px_30px] opacity-30"></div>
                 
@@ -143,89 +161,107 @@
                 <div class="relative w-full h-full flex items-center justify-between px-6 z-10">
                     
                     <!-- Left Node (Alice Client) -->
-                    <div id="node-alice" class="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-container border border-white/10 w-36 transition-all duration-300 relative">
-                        <div class="w-12 h-12 rounded-full bg-primary-container/20 border border-primary/40 flex items-center justify-center text-primary font-bold font-display">A</div>
-                        <span class="text-xs font-semibold">Client (Alice)</span>
-                        <div class="text-[10px] text-outline px-2 py-0.5 rounded bg-black/30 border border-white/5 font-mono">192.168.1.5</div>
+                    <div id="node-alice" class="flex flex-col items-center gap-2 p-3 rounded-xl bg-surface-container border border-white/10 w-32 transition-all duration-300 relative">
+                        <div class="w-10 h-10 rounded-full bg-primary-container/20 border border-primary/40 flex items-center justify-center text-primary font-bold font-display text-sm">A</div>
+                        <span class="text-[11px] font-semibold">Client (Alice)</span>
+                        <div class="text-[9px] text-outline px-1.5 py-0.5 rounded bg-black/30 border border-white/5 font-mono">Alice Node</div>
                     </div>
 
-                    <!-- Center System (Firebase / Server / Certificates) -->
-                    <div class="flex flex-col gap-8 justify-center items-center h-full relative">
+                    <!-- Center System -->
+                    <div class="flex flex-col gap-4 justify-center items-center h-full relative">
                         
                         <!-- Top Center Node (Firebase Auth) -->
-                        <div id="node-firebase" class="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-container border border-white/10 w-36 transition-all duration-300 relative">
-                            <div class="w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-500">
-                                <span class="material-symbols-outlined">security</span>
+                        <div id="node-firebase" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-container border border-white/10 w-32 transition-all duration-300 relative">
+                            <div class="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-500">
+                                <span class="material-symbols-outlined text-[20px]">security</span>
                             </div>
-                            <span class="text-xs font-semibold text-orange-500">Firebase Auth</span>
+                            <span class="text-[11px] font-semibold text-orange-500">Firebase Auth</span>
                         </div>
 
                         <!-- Mid Center Node (CypherTalk Backend) -->
-                        <div id="node-server" class="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-container border border-white/10 w-36 transition-all duration-300 relative">
-                            <div class="w-12 h-12 rounded-full bg-secondary/10 border border-secondary/30 flex items-center justify-center text-secondary">
-                                <span class="material-symbols-outlined">dns</span>
+                        <div id="node-server" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-container border border-white/10 w-32 transition-all duration-300 relative">
+                            <div class="w-10 h-10 rounded-full bg-secondary/10 border border-secondary/30 flex items-center justify-center text-secondary">
+                                <span class="material-symbols-outlined text-[20px]">dns</span>
                             </div>
-                            <span class="text-xs font-semibold text-secondary">CypherTalk Server</span>
+                            <span class="text-[11px] font-semibold text-secondary">CypherTalk Server</span>
                         </div>
 
                         <!-- Bottom Center Node (Google Certificates) -->
-                        <div id="node-google" class="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-container border border-white/10 w-36 transition-all duration-300 relative opacity-60">
-                            <div class="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-500">
-                                <span class="material-symbols-outlined">vpn_key</span>
+                        <div id="node-google" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-container border border-white/10 w-32 transition-all duration-300 relative">
+                            <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-500">
+                                <span class="material-symbols-outlined text-[20px]">vpn_key</span>
                             </div>
-                            <span class="text-xs font-semibold text-blue-500">Google Certs API</span>
+                            <span class="text-[11px] font-semibold text-blue-500">Google Certs</span>
                         </div>
                     </div>
 
                     <!-- Right Node (Bob Client) -->
-                    <div id="node-bob" class="flex flex-col items-center gap-2 p-4 rounded-xl bg-surface-container border border-white/10 w-36 transition-all duration-300 relative">
-                        <div class="w-12 h-12 rounded-full bg-secondary/20 border border-secondary/40 flex items-center justify-center text-secondary font-bold font-display">B</div>
-                        <span class="text-xs font-semibold">Client (Bob)</span>
-                        <div class="text-[10px] text-outline px-2 py-0.5 rounded bg-black/30 border border-white/5 font-mono">192.168.1.10</div>
+                    <div id="node-bob" class="flex flex-col items-center gap-2 p-3 rounded-xl bg-surface-container border border-white/10 w-32 transition-all duration-300 relative">
+                        <div class="w-10 h-10 rounded-full bg-secondary/20 border border-secondary/40 flex items-center justify-center text-secondary font-bold font-display text-sm">B</div>
+                        <span class="text-[11px] font-semibold">Client (Bob)</span>
+                        <div class="text-[9px] text-outline px-1.5 py-0.5 rounded bg-black/30 border border-white/5 font-mono">Bob Node</div>
                     </div>
 
                     <!-- Animated Data Stream Overlay -->
                     <svg class="absolute inset-0 w-full h-full pointer-events-none" id="stream-lines">
-                        <!-- Stream Alice -> Firebase -->
-                        <path id="line-alice-firebase" d="M 120 120 Q 220 80 320 80" fill="none" stroke="transparent" stroke-width="2" />
-                        <circle id="dot-alice-firebase" r="4" fill="#f97316" class="hidden"/>
+                        <!-- Path coordinates calibrated relative to exact element offsets -->
+                        <path id="path-alice-firebase" d="M 120 180 Q 250 80 370 80" fill="none" stroke="transparent" stroke-width="2" />
+                        <path id="path-firebase-alice" d="M 370 80 Q 250 80 120 180" fill="none" stroke="transparent" stroke-width="2" />
+                        <path id="path-alice-server" d="M 120 190 L 370 190" fill="none" stroke="transparent" stroke-width="2"/>
+                        <path id="path-server-alice" d="M 370 190 L 120 190" fill="none" stroke="transparent" stroke-width="2"/>
+                        <path id="path-server-google" d="M 430 220 L 430 280" fill="none" stroke="transparent" stroke-width="2"/>
+                        <path id="path-google-server" d="M 430 280 L 430 220" fill="none" stroke="transparent" stroke-width="2"/>
+                        <path id="path-server-bob" d="M 490 190 L 640 190" fill="none" stroke="transparent" stroke-width="2"/>
+                        <path id="path-bob-server" d="M 640 190 L 490 190" fill="none" stroke="transparent" stroke-width="2"/>
+                        <path id="path-p2p" d="M 120 200 Q 380 280 640 200" fill="none" stroke="transparent" stroke-width="3"/>
 
-                        <!-- Stream Alice -> Server -->
-                        <path id="line-alice-server" d="M 120 190 L 320 190" fill="none" stroke="transparent" stroke-width="2"/>
-                        <circle id="dot-alice-server" r="4" fill="#b4c5ff" class="hidden"/>
-
-                        <!-- Stream Server -> Google Certs -->
-                        <path id="line-server-google" d="M 380 230 L 380 290" fill="none" stroke="transparent" stroke-width="2"/>
-                        <circle id="dot-server-google" r="4" fill="#3b82f6" class="hidden"/>
-
-                        <!-- Stream Bob -> Server -->
-                        <path id="line-bob-server" d="M 640 190 L 440 190" fill="none" stroke="transparent" stroke-width="2"/>
-                        <circle id="dot-bob-server" r="4" fill="#4edea3" class="hidden"/>
-
-                        <!-- Stream Direct P2P Tunnel -->
-                        <path id="line-p2p" d="M 120 220 Q 380 340 640 220" fill="none" stroke="transparent" stroke-width="3"/>
-                        <circle id="dot-p2p" r="5" fill="#10b981" class="hidden"/>
+                        <circle id="flying-dot" r="4" fill="#b4c5ff" class="hidden"/>
                     </svg>
+                </div>
+            </div>
+
+            <!-- Sequential Control Bar -->
+            <div class="glass-panel px-6 py-4 rounded-xl flex items-center justify-between z-10">
+                <div class="flex items-center gap-3">
+                    <button onclick="prevSubstep()" class="p-2 bg-white/5 border border-white/10 hover:bg-white/10 text-on-surface rounded-lg transition-colors flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[20px]">navigate_before</span>
+                    </button>
+                    <button onclick="togglePlay()" id="playBtn" class="px-4 py-2 bg-primary text-background hover:brightness-110 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[16px]" id="playIcon">play_arrow</span>
+                        <span id="playText">PLAY</span>
+                    </button>
+                    <button onclick="nextSubstep()" class="p-2 bg-white/5 border border-white/10 hover:bg-white/10 text-on-surface rounded-lg transition-colors flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[20px]">navigate_next</span>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <!-- Progress Dots -->
+                    <div class="flex gap-2" id="progressDots"></div>
+                    <span class="font-mono text-xs text-outline" id="stepCounter">Step 1 of 5</span>
                 </div>
             </div>
 
             <!-- Detailed Explanation Card -->
             <div class="glass-panel p-6 rounded-2xl flex flex-col gap-4 min-h-[220px]">
-                <div class="flex items-center gap-2 border-b border-white/10 pb-3">
-                    <span class="material-symbols-outlined text-primary" id="detail-icon">verified_user</span>
-                    <h3 class="font-display text-lg font-bold text-on-surface" id="detail-title">Phase 1: Node Registration & Verification</h3>
+                <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary" id="detail-icon">verified_user</span>
+                        <h3 class="font-display text-base font-bold text-on-surface" id="detail-title">Substep details</h3>
+                    </div>
+                    <span class="text-[10px] bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded font-mono font-bold" id="detail-phase-lbl">PHASE 1</span>
                 </div>
-                <div class="text-sm text-on-surface-variant leading-relaxed" id="detail-body">
+                <div class="text-sm text-on-surface-variant leading-relaxed min-h-[80px]" id="detail-body">
                     Loading description...
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-white/5 pt-4 text-xs">
                     <div>
                         <span class="text-outline block uppercase tracking-wider text-[10px] mb-1">Key Files</span>
-                        <code class="text-primary font-mono" id="detail-files">public/login.html, server.js</code>
+                        <code class="text-primary font-mono" id="detail-files">server.js</code>
                     </div>
                     <div>
                         <span class="text-outline block uppercase tracking-wider text-[10px] mb-1">Protocols & Specs</span>
-                        <code class="text-secondary font-mono" id="detail-protocols">JWT, RS256, HTTP POST</code>
+                        <code class="text-secondary font-mono" id="detail-protocols">JWT</code>
                     </div>
                     <div>
                         <span class="text-outline block uppercase tracking-wider text-[10px] mb-1">Validation Action</span>
@@ -238,162 +274,197 @@
 
     <!-- Interactive JS Controller -->
     <script>
-        const phases = {
-            1: {
-                title: "Phase 1: Node Registration & Verification",
-                icon: "verified_user",
-                files: "login.html, server.js, data.json",
-                protocols: "JWT (RS256), HTTPS POST",
-                validation: "Fetch Google JWKs & check signatures",
-                body: "Alice registers via Email & Password. Firebase Auth dispatches a verification link to her Gmail. Once Alice clicks the link, the frontend retrieves a Firebase ID Token (JWT) and submits it to `/api/register`. The Node server fetches Google's public signing certificates dynamically, validates Alice's token signature, matches the audience (`cyphertalk-195d6`), extracts her `uid`, and registers her node in `data.json`.",
-                setupGraphics: () => {
-                    // Activate/deactivate nodes
-                    setNodeActive('node-alice', true);
-                    setNodeActive('node-firebase', true);
-                    setNodeActive('node-server', true);
-                    setNodeActive('node-google', true);
-                    setNodeActive('node-bob', false);
-
-                    // Setup data path links
-                    showPath('line-alice-firebase', '#f97316');
-                    showPath('line-alice-server', '#b4c5ff');
-                    showPath('line-server-google', '#3b82f6');
-                    hidePath('line-bob-server');
-                    hidePath('line-p2p');
-
-                    // Run animated dots
-                    animateDot('dot-alice-firebase', 'line-alice-firebase');
-                    setTimeout(() => animateDot('dot-alice-server', 'line-alice-server'), 1000);
-                    setTimeout(() => animateDot('dot-server-google', 'line-server-google'), 2000);
+        const sequence = {
+            1: [
+                {
+                    title: "1.1 Account Registration Initiated",
+                    body: "Alice inputs her credentials in login.html. The Firebase client SDK submits them to Firebase Auth. A verification email is auto-dispatched to Alice's inbox.",
+                    activeNodes: ["node-alice", "node-firebase"],
+                    path: "path-alice-firebase",
+                    dotColor: "#f97316",
+                    files: "public/login.html",
+                    protocols: "HTTPS POST",
+                    validation: "Password strength check",
+                },
+                {
+                    title: "1.2 Email Verification Validation",
+                    body: "Alice clicks the link in her Gmail inbox. Firebase verifies her email and activates her session, flagging user.emailVerified as true on subsequent client updates.",
+                    activeNodes: ["node-alice", "node-firebase"],
+                    path: "path-firebase-alice",
+                    dotColor: "#f97316",
+                    files: "public/login.html",
+                    protocols: "SMTP Link verification",
+                    validation: "Verified email state gate",
+                },
+                {
+                    title: "1.3 ID Token Dispatch to Server",
+                    body: "Alice's verified client retrieves a Firebase ID Token (JWT) and POSTs it to the CypherTalk backend /api/register to register her node workspace.",
+                    activeNodes: ["node-alice", "node-server"],
+                    path: "path-alice-server",
+                    dotColor: "#b4c5ff",
+                    files: "public/login.html, server.js",
+                    protocols: "JWT Bearer Payload",
+                    validation: "API endpoint registration validation",
+                },
+                {
+                    title: "1.4 Dynamic Certificates Retrieval",
+                    body: "The Node server decodes the token header and fetches Google's public JSON Web Key (JWK) certificates dynamically to confirm Alice's token signature matches.",
+                    activeNodes: ["node-server", "node-google"],
+                    path: "path-server-google",
+                    dotColor: "#3b82f6",
+                    files: "server.js",
+                    protocols: "JWKs API fetch",
+                    validation: "Dynamic Google cert signature comparison",
+                },
+                {
+                    title: "1.5 Registration Success & Local Mapping",
+                    body: "Google returns the keys. Server validates claims (issuer, audience: cyphertalk-195d6), maps Alice's Firebase UID to data.json, and returns a 200 OK success payload.",
+                    activeNodes: ["node-server", "node-alice"],
+                    path: "path-server-alice",
+                    dotColor: "#b4c5ff",
+                    files: "server.js, data.json",
+                    protocols: "HTTPS JSON Response",
+                    validation: "JWT claims validity checks",
                 }
-            },
-            2: {
-                title: "Phase 2: Signaling Channel Handshake",
-                icon: "settings_input_antenna",
-                files: "server.js, index.html",
-                protocols: "WebSockets, Socket.io, JWT",
-                validation: "Validate Firebase Token during Connection",
-                body: "Alice opens the secure console index.html. Firebase validates her login, and Socket.io initiates a WebSocket connection to CypherTalk server, passing her fresh ID Token in the handshake payload. The server's socket authentication middleware intercepts the connection, validates the token using the Google certificates verifier, extracts the user `userId`, maps it to the active socket ID, and broadcasts a `'user-status-change'` event. Bob's client receives the socket notification and updates Alice's status indicator to green (Available Now).",
-                setupGraphics: () => {
-                    setNodeActive('node-alice', true);
-                    setNodeActive('node-firebase', false);
-                    setNodeActive('node-server', true);
-                    setNodeActive('node-google', false);
-                    setNodeActive('node-bob', true);
-
-                    hidePath('line-alice-firebase');
-                    showPath('line-alice-server', '#b4c5ff');
-                    hidePath('line-server-google');
-                    showPath('line-bob-server', '#4edea3');
-                    hidePath('line-p2p');
-
-                    animateDot('dot-alice-server', 'line-alice-server');
-                    setTimeout(() => animateDot('dot-bob-server', 'line-bob-server'), 1200);
+            ],
+            2: [
+                {
+                    title: "2.1 Socket Connection Handshake",
+                    body: "Alice opens index.html. The client starts a Socket.io WebSocket connection, passing her Firebase ID Token directly in the connection handshake configuration.",
+                    activeNodes: ["node-alice", "node-server"],
+                    path: "path-alice-server",
+                    dotColor: "#b4c5ff",
+                    files: "public/index.html, server.js",
+                    protocols: "WebSockets, Socket.io",
+                    validation: "Middleware JWT decoding checks",
+                },
+                {
+                    title: "2.2 WebSocket Handshake Authentication",
+                    body: "The server Socket.io middleware intercepts the connection, decodes the token, checks validity with cached Google JWKs, and sets socket.user context.",
+                    activeNodes: ["node-server"],
+                    path: null,
+                    dotColor: null,
+                    files: "server.js",
+                    protocols: "Socket.io Auth Middleware",
+                    validation: "Dynamic JWT claims verify",
+                },
+                {
+                    title: "2.3 Presence Indicator Broadcast",
+                    body: "Server maps Alice's ID to her active socket. It broadcasts a 'user-status-change' event ({ userId: Alice, online: true }) to all active users.",
+                    activeNodes: ["node-server", "node-bob"],
+                    path: "path-server-bob",
+                    dotColor: "#4edea3",
+                    files: "server.js",
+                    protocols: "WebSocket broadcast event",
+                    validation: "Presence state update",
+                },
+                {
+                    title: "2.4 Contact List Status Update",
+                    body: "Bob's client receives the socket notification. His UI dynamically updates Alice's contact row status color from offline (gray) to online (pulse emerald).",
+                    activeNodes: ["node-bob"],
+                    path: null,
+                    dotColor: null,
+                    files: "public/index.html",
+                    protocols: "DOM Rendering",
+                    validation: "UI state indicator",
                 }
-            },
-            3: {
-                title: "Phase 3: WebRTC Signaling Exchange",
-                icon: "swap_calls",
-                files: "server.js, index.html",
-                protocols: "SDP, ICE Candidates, WebSockets",
-                validation: "Online verification & Busy State Interceptors",
-                body: "Alice dials Bob. Her browser opens local audio/video hardware streams and creates a WebRTC SDP Offer. The offer is emitted over the Socket.io channel (`call-user`). The server intercepts it, verifies that Bob is online and not already in an active call, and relays the offer to Bob. Bob's browser receives the offer, prompts him, and on acceptance, replies with an SDP Answer relayed back to Alice. Both browsers then exchange ICE Candidates (network routes) via the server to establish direct connection pathways.",
-                setupGraphics: () => {
-                    setNodeActive('node-alice', true);
-                    setNodeActive('node-firebase', false);
-                    setNodeActive('node-server', true);
-                    setNodeActive('node-google', false);
-                    setNodeActive('node-bob', true);
-
-                    hidePath('line-alice-firebase');
-                    showPath('line-alice-server', '#b4c5ff');
-                    hidePath('line-server-google');
-                    showPath('line-bob-server', '#4edea3');
-                    hidePath('line-p2p');
-
-                    animateDot('dot-alice-server', 'line-alice-server');
-                    setTimeout(() => animateDot('dot-bob-server', 'line-bob-server'), 1000);
+            ],
+            3: [
+                {
+                    title: "3.1 Local Stream Capture & SDP Offer",
+                    body: "Alice dials Bob. Her client captures local mic/camera tracks, builds an RTCPeerConnection object, and generates an SDP Offer payload describing media channels.",
+                    activeNodes: ["node-alice"],
+                    path: null,
+                    dotColor: null,
+                    files: "public/index.html",
+                    protocols: "WebRTC RTCConfiguration",
+                    validation: "User hardware media checks",
+                },
+                {
+                    title: "3.2 Offer Relayed to Server",
+                    body: "Alice emits 'call-user' to the server. The server intercepts it, validates that Bob is online and not in another call, and redirects the offer to Bob's socket.",
+                    activeNodes: ["node-alice", "node-server"],
+                    path: "path-alice-server",
+                    dotColor: "#b4c5ff",
+                    files: "server.js, public/index.html",
+                    protocols: "WebSocket Event call-user",
+                    validation: "Target busy/offline check validation",
+                },
+                {
+                    title: "3.3 Bob Receives & Accepts Offer",
+                    body: "Bob receives 'incoming-call' on his browser. He clicks Accept, opens his local camera, generates an SDP Answer, and sends it back to the server via 'accept-call'.",
+                    activeNodes: ["node-bob", "node-server"],
+                    path: "path-bob-server",
+                    dotColor: "#4edea3",
+                    files: "public/index.html, server.js",
+                    protocols: "WebSocket Event accept-call",
+                    validation: "Callee acceptance signal",
+                },
+                {
+                    title: "3.4 Answer Delivered to Alice",
+                    body: "Server forwards Bob's SDP Answer to Alice via the 'call-accepted' event. Alice's browser accepts Bob's description: peerConnection.setRemoteDescription().",
+                    activeNodes: ["node-server", "node-alice"],
+                    path: "path-server-alice",
+                    dotColor: "#b4c5ff",
+                    files: "server.js, public/index.html",
+                    protocols: "WebSocket Event call-accepted",
+                    validation: "SDP Session descriptions lock",
+                },
+                {
+                    title: "3.5 ICE Network Candidates Exchange",
+                    body: "Both browsers discover local/remote network routes (ICE Candidates) using Google STUN. Candidates are exchanged via signaling sockets until a path matches.",
+                    activeNodes: ["node-alice", "node-server", "node-bob"],
+                    path: "path-p2p",
+                    dotColor: "#10b981",
+                    files: "public/index.html, server.js",
+                    protocols: "ICE / STUN Candidate Exchange",
+                    validation: "Network routing path match",
                 }
-            },
-            4: {
-                title: "Phase 4: P2P Secure Media Tunnel",
-                icon: "shield_lock",
-                files: "index.html",
-                protocols: "SRTP, DTLS, AES-GCM, P2P",
-                validation: "DTLS Ephemeral Key Exchange Handshake",
-                body: "Once routing pathways are negotiated, Alice's and Bob's browsers directly execute a DTLS handshake over their peer-to-peer connection to negotiate transient encryption keys. All audio, video, and screen sharing tracks are encrypted using SRTP (AES-GCM 128/256-bit). The media stream flows directly peer-to-peer. The CypherTalk server plays **no part** in routing the media, has no access to the DTLS keys, and cannot inspect or record the decrypted stream, satisfying End-to-End Encryption (E2EE) standards.",
-                setupGraphics: () => {
-                    setNodeActive('node-alice', true);
-                    setNodeActive('node-firebase', false);
-                    setNodeActive('node-server', false);
-                    setNodeActive('node-google', false);
-                    setNodeActive('node-bob', true);
-
-                    hidePath('line-alice-firebase');
-                    hidePath('line-alice-server');
-                    hidePath('line-server-google');
-                    hidePath('line-bob-server');
-                    showPath('line-p2p', '#10b981');
-
-                    animateDot('dot-p2p', 'line-p2p');
+            ],
+            4: [
+                {
+                    title: "4.1 Direct Network Tunnel Established",
+                    body: "Once ICE candidate paths are agreed, Alice's and Bob's browsers bypass the signaling server entirely, routing traffic directly peer-to-peer (P2P).",
+                    activeNodes: ["node-alice", "node-bob"],
+                    path: "path-p2p",
+                    dotColor: "#10b981",
+                    files: "public/index.html",
+                    protocols: "UDP NAT Hole Punching",
+                    validation: "Direct P2P Connectivity",
+                },
+                {
+                    title: "4.2 DTLS Key Negotiation Handshake",
+                    body: "Browsers execute a direct DTLS handshake. They exchange self-signed certificates and generate unique, ephemeral encryption keys for the session (PFS).",
+                    activeNodes: ["node-alice", "node-bob"],
+                    path: "path-p2p",
+                    dotColor: "#10b981",
+                    files: "public/index.html",
+                    protocols: "DTLS (TLS 1.2 over UDP)",
+                    validation: "Perfect Forward Secrecy validation",
+                },
+                {
+                    title: "4.3 E2EE Encrypted SRTP Streaming",
+                    body: "Using negotiated DTLS keys, all audio/video/screen share tracks are encrypted via SRTP (AES-GCM 128/256). The CypherTalk server cannot read or decrypt the streams.",
+                    activeNodes: ["node-alice", "node-bob"],
+                    path: "path-p2p",
+                    dotColor: "#10b981",
+                    files: "public/index.html",
+                    protocols: "SRTP, AES-GCM",
+                    validation: "End-to-End Cryptographic Security",
                 }
-            }
+            ]
         };
 
-        let activePhase = 1;
-        let animationInterval;
-
-        function setNodeActive(id, active) {
-            const el = document.getElementById(id);
-            if (active) {
-                el.classList.remove('opacity-60', 'scale-95');
-                el.classList.add('opacity-100', 'scale-100', 'glow-active');
-            } else {
-                el.classList.add('opacity-60', 'scale-95');
-                el.classList.remove('opacity-100', 'scale-100', 'glow-active');
-            }
-        }
-
-        function showPath(id, color) {
-            const el = document.getElementById(id);
-            el.setAttribute('stroke', color);
-            el.classList.add('pulse-line');
-        }
-
-        function hidePath(id) {
-            const el = document.getElementById(id);
-            el.setAttribute('stroke', 'transparent');
-            el.classList.remove('pulse-line');
-        }
-
-        function animateDot(dotId, pathId) {
-            const dot = document.getElementById(dotId);
-            const path = document.getElementById(pathId);
-            if (!dot || !path) return;
-
-            dot.classList.remove('hidden');
-            const pathLength = path.getTotalLength();
-            let start = null;
-
-            function step(timestamp) {
-                if (!start) start = timestamp;
-                const progress = (timestamp - start) / 1200; // Animation duration
-                if (progress < 1) {
-                    const point = path.getPointAtLength(progress * pathLength);
-                    dot.setAttribute('cx', point.x);
-                    dot.setAttribute('cy', point.y);
-                    window.requestAnimationFrame(step);
-                } else {
-                    dot.classList.add('hidden');
-                }
-            }
-            window.requestAnimationFrame(step);
-        }
+        let currentPhase = 1;
+        let currentSubstepIndex = 0;
+        let isPlaying = false;
+        let playInterval = null;
 
         function selectPhase(phaseNum) {
-            activePhase = phaseNum;
-
-            // Update sidebar buttons styling
+            currentPhase = phaseNum;
+            currentSubstepIndex = 0;
+            
+            // Highlight phase button
             for (let i = 1; i <= 4; i++) {
                 const btn = document.getElementById(`phase-btn-${i}`);
                 const counter = btn.querySelector('div');
@@ -408,26 +479,171 @@
                 }
             }
 
-            // Update description panel
-            const data = phases[phaseNum];
-            document.getElementById('detail-icon').textContent = data.icon;
+            renderProgressDots();
+            showSubstep(currentSubstepIndex);
+        }
+
+        function renderProgressDots() {
+            const container = document.getElementById('progressDots');
+            container.innerHTML = '';
+            const steps = sequence[currentPhase];
+            
+            steps.forEach((_, idx) => {
+                const dot = document.createElement('div');
+                dot.className = `step-dot w-2 h-2 rounded-full bg-white/15 transition-all duration-300 cursor-pointer ${idx === 0 ? 'active' : ''}`;
+                dot.onclick = () => {
+                    pause();
+                    showSubstep(idx);
+                };
+                container.appendChild(dot);
+            });
+            
+            document.getElementById('stepCounter').textContent = `Step 1 of ${steps.length}`;
+        }
+
+        function showSubstep(index) {
+            currentSubstepIndex = index;
+            const steps = sequence[currentPhase];
+            const data = steps[index];
+
+            // Update counter and dots
+            document.getElementById('stepCounter').textContent = `Step ${index + 1} of ${steps.length}`;
+            const dots = document.querySelectorAll('.step-dot');
+            dots.forEach((dot, dIdx) => {
+                if (dIdx === index) dot.classList.add('active');
+                else dot.classList.remove('active');
+            });
+
+            // Update text panel details
+            document.getElementById('detail-phase-lbl').textContent = `PHASE ${currentPhase}`;
             document.getElementById('detail-title').textContent = data.title;
             document.getElementById('detail-body').textContent = data.body;
             document.getElementById('detail-files').textContent = data.files;
             document.getElementById('detail-protocols').textContent = data.protocols;
             document.getElementById('detail-validation').textContent = data.validation;
 
-            // Trigger graphics & animations
-            clearInterval(animationInterval);
-            data.setupGraphics();
-            
-            // Loop the animations every 3 seconds
-            animationInterval = setInterval(() => {
-                data.setupGraphics();
-            }, 3500);
+            // Calibrate Graphic Nodes highlights
+            const allNodes = ["node-alice", "node-firebase", "node-server", "node-google", "node-bob"];
+            allNodes.forEach(nodeId => {
+                const el = document.getElementById(nodeId);
+                if (data.activeNodes.includes(nodeId)) {
+                    el.classList.remove('opacity-40', 'scale-95');
+                    el.classList.add('opacity-100', 'scale-100', 'glow-active');
+                } else {
+                    el.classList.add('opacity-40', 'scale-95');
+                    el.classList.remove('opacity-100', 'scale-100', 'glow-active');
+                }
+            });
+
+            // Reset SVG lines and trigger dot
+            const allPaths = [
+                "path-alice-firebase", "path-firebase-alice", "path-alice-server", 
+                "path-server-alice", "path-server-google", "path-google-server", 
+                "path-server-bob", "path-bob-server", "path-p2p"
+            ];
+            allPaths.forEach(pId => {
+                const p = document.getElementById(pId);
+                p.setAttribute('stroke', 'transparent');
+                p.classList.remove('pulse-line');
+            });
+
+            if (data.path) {
+                const activePath = document.getElementById(data.path);
+                activePath.setAttribute('stroke', data.dotColor);
+                activePath.classList.add('pulse-line');
+                triggerFlyingDot(data.path, data.dotColor);
+            } else {
+                document.getElementById('flying-dot').classList.add('hidden');
+            }
         }
 
-        // Initialize Phase 1 on Load
+        function triggerFlyingDot(pathId, color) {
+            const dot = document.getElementById('flying-dot');
+            const path = document.getElementById(pathId);
+            if (!dot || !path) return;
+
+            dot.setAttribute('fill', color);
+            dot.classList.remove('hidden');
+
+            const pathLength = path.getTotalLength();
+            let start = null;
+
+            function step(timestamp) {
+                if (!start) start = timestamp;
+                const progress = (timestamp - start) / 1000; // Animation duration (1 second)
+                if (progress < 1) {
+                    const point = path.getPointAtLength(progress * pathLength);
+                    dot.setAttribute('cx', point.x);
+                    dot.setAttribute('cy', point.y);
+                    window.requestAnimationFrame(step);
+                } else {
+                    // Loop animation if playing, or keep it hidden
+                    if (isPlaying && currentSubstepIndex === sequence[currentPhase].indexOf(sequence[currentPhase].find(s => s.path === pathId))) {
+                        triggerFlyingDot(pathId, color);
+                    } else {
+                        dot.classList.add('hidden');
+                    }
+                }
+            }
+            window.requestAnimationFrame(step);
+        }
+
+        function nextSubstep() {
+            const steps = sequence[currentPhase];
+            if (currentSubstepIndex < steps.length - 1) {
+                showSubstep(currentSubstepIndex + 1);
+            } else {
+                // Wrap to next phase or loop
+                if (currentPhase < 4) {
+                    selectPhase(currentPhase + 1);
+                } else {
+                    selectPhase(1);
+                }
+            }
+        }
+
+        function prevSubstep() {
+            if (currentSubstepIndex > 0) {
+                showSubstep(currentSubstepIndex - 1);
+            } else {
+                if (currentPhase > 1) {
+                    selectPhase(currentPhase - 1);
+                    showSubstep(sequence[currentPhase].length - 1);
+                }
+            }
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                pause();
+            } else {
+                play();
+            }
+        }
+
+        function play() {
+            isPlaying = true;
+            document.getElementById('playIcon').textContent = 'pause';
+            document.getElementById('playText').textContent = 'PAUSE';
+            document.getElementById('playBtn').classList.remove('bg-primary');
+            document.getElementById('playBtn').classList.add('bg-white/10');
+            
+            // Advance steps automatically every 4 seconds
+            playInterval = setInterval(() => {
+                nextSubstep();
+            }, 4500);
+        }
+
+        function pause() {
+            isPlaying = false;
+            clearInterval(playInterval);
+            document.getElementById('playIcon').textContent = 'play_arrow';
+            document.getElementById('playText').textContent = 'PLAY';
+            document.getElementById('playBtn').classList.add('bg-primary');
+            document.getElementById('playBtn').classList.remove('bg-white/10');
+        }
+
+        // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
             selectPhase(1);
         });
