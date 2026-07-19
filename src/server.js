@@ -8,7 +8,7 @@ const path = require('path');
 const nodemailer = require('nodemailer');
 
 // Load environment variables from .env if it exists
-const ENV_FILE = path.join(__dirname, '.env');
+const ENV_FILE = path.join(__dirname, '..', '.env');
 if (fs.existsSync(ENV_FILE)) {
     const envConfig = fs.readFileSync(ENV_FILE, 'utf-8');
     envConfig.split('\n').forEach(line => {
@@ -27,7 +27,7 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } });
 
 const JWT_SECRET = process.env.JWT_SECRET || 'encrypted-video-call-secure-secret-key-2026';
-const DB_FILE = path.join(__dirname, 'data.json');
+const DB_FILE = path.join(__dirname, '..', 'data.json');
 
 // --- FIREBASE TOKEN VERIFICATION ---
 const https = require('https');
@@ -96,7 +96,7 @@ function readDB() {
 function writeDB(data) { fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2)); }
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.get('/api/ping', (req, res) => {
     res.json({ status: "alive" });
