@@ -28,6 +28,7 @@ const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } 
 
 const JWT_SECRET = process.env.JWT_SECRET || 'encrypted-video-call-secure-secret-key-2026';
 const DB_FILE = path.join(__dirname, '..', 'data.json');
+const onlineUsers = new Map();
 
 // --- FIREBASE TOKEN VERIFICATION ---
 const https = require('https');
@@ -239,8 +240,6 @@ io.use(async (socket, next) => {
         next(new Error('Unauthorized'));
     }
 });
-
-const onlineUsers = new Map(); 
 
 io.on('connection', (socket) => {
     onlineUsers.set(socket.user.userId, { socketId: socket.id });

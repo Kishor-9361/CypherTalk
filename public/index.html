@@ -522,7 +522,7 @@
                         'turns:openrelay.metered.ca:443?transport=tcp'
                     ],
                     username: 'openrelay',
-                    password: 'openrelay'
+                    credential: 'openrelay'
                 }
             ]
         };
@@ -1030,6 +1030,7 @@
 
             socket.on('connect', () => {
                 console.log("Connected to secure Firebase signaling endpoint");
+                loadContacts();
                 const dot = document.getElementById('myStatusDot');
                 if (dot) {
                     dot.className = "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-surface-container-low bg-secondary pulse-emerald";
