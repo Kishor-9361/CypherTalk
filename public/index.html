@@ -793,7 +793,14 @@
 
                 peerConnection.onicecandidate = (event) => {
                     if (event.candidate) {
-                        socket.emit('ice-candidate', { toUserId: activePeerUserId, candidate: event.candidate });
+                        const cand = event.candidate;
+                        const candidatePayload = {
+                            candidate: cand.candidate,
+                            sdpMid: cand.sdpMid,
+                            sdpMLineIndex: cand.sdpMLineIndex,
+                            usernameFragment: cand.usernameFragment
+                        };
+                        socket.emit('ice-candidate', { toUserId: activePeerUserId, candidate: candidatePayload });
                     }
                 };
 
@@ -804,9 +811,15 @@
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
 
-                socket.emit('call-user', { toUserId: activePeerUserId, offer });
+                const localDesc = peerConnection.localDescription || offer;
+                const offerPayload = {
+                    type: localDesc.type || 'offer',
+                    sdp: localDesc.sdp
+                };
+
+                socket.emit('call-user', { toUserId: activePeerUserId, offer: offerPayload });
             } catch (err) {
-                console.error("Hardware acquisition failed:", err);
+                console.error("Initiate call failed:", err);
                 if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
                     alert("Permission Denied: CypherTalk requires Microphone and/or Camera access to make calls.");
                 } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
@@ -814,7 +827,7 @@
                 } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
                     alert("Hardware Error: Camera or Microphone is already in use by another application.");
                 } else {
-                    alert("Failed to access hardware devices: " + err.message);
+                    alert("Call Connection Failed: " + err.message);
                 }
                 endCall();
             }
@@ -844,7 +857,14 @@
 
                 peerConnection.onicecandidate = (event) => {
                     if (event.candidate) {
-                        socket.emit('ice-candidate', { toUserId: activePeerUserId, candidate: event.candidate });
+                        const cand = event.candidate;
+                        const candidatePayload = {
+                            candidate: cand.candidate,
+                            sdpMid: cand.sdpMid,
+                            sdpMLineIndex: cand.sdpMLineIndex,
+                            usernameFragment: cand.usernameFragment
+                        };
+                        socket.emit('ice-candidate', { toUserId: activePeerUserId, candidate: candidatePayload });
                     }
                 };
 
@@ -852,12 +872,21 @@
                     document.getElementById('remoteVideo').srcObject = event.streams[0];
                 };
 
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(socket.incomingOffer));
+                if (!socket.incomingOffer || !socket.incomingOffer.sdp) {
+                    throw new Error("Invalid remote offer session description.");
+                }
+
+                const offerInit = {
+                    type: socket.incomingOffer.type || 'offer',
+                    sdp: socket.incomingOffer.sdp
+                };
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(offerInit));
                 
                 // Flush queued remote ICE candidates
                 for (const candidate of iceCandidatesQueue) {
                     try {
-                        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                        const candObj = (candidate instanceof RTCIceCandidate) ? candidate : new RTCIceCandidate(candidate);
+                        await peerConnection.addIceCandidate(candObj);
                     } catch (cErr) {
                         console.error("Failed to add queued candidate:", cErr);
                     }
@@ -867,12 +896,18 @@
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
 
-                socket.emit('accept-call', { toUserId: activePeerUserId, answer });
+                const localDesc = peerConnection.localDescription || answer;
+                const answerPayload = {
+                    type: localDesc.type || 'answer',
+                    sdp: localDesc.sdp
+                };
+
+                socket.emit('accept-call', { toUserId: activePeerUserId, answer: answerPayload });
                 socket.incomingOffer = null;
                 
                 switchState(states.ACTIVE);
             } catch (err) {
-                console.error("Hardware acquisition failed:", err);
+                console.error("Accept call failed:", err);
                 if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
                     alert("Permission Denied: CypherTalk requires Microphone and/or Camera access to accept calls.");
                 } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
@@ -880,7 +915,7 @@
                 } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
                     alert("Hardware Error: Camera or Microphone is already in use by another application.");
                 } else {
-                    alert("Failed to access hardware devices: " + err.message);
+                    alert("Call Connection Failed: " + err.message);
                 }
                 declineCall();
             }
@@ -1086,19 +1121,37 @@
                 document.getElementById('incoming-avatar').textContent = activePeerName.charAt(0).toUpperCase();
                 
                 switchState(states.INCOMING);
-                socket.incomingOffer = offer;
+
+                let offerObj = offer;
+                if (typeof offer === 'string') {
+                    try { offerObj = JSON.parse(offer); } catch (e) {}
+                }
+                const sanitizedOffer = {
+                    type: (offerObj && offerObj.type) ? offerObj.type : 'offer',
+                    sdp: (offerObj && offerObj.sdp) ? offerObj.sdp : (typeof offerObj === 'string' ? offerObj : '')
+                };
+                socket.incomingOffer = sanitizedOffer;
             });
 
             socket.on('call-accepted', async ({ fromUserId, answer }) => {
                 if (currentActiveState !== states.OUTGOING || fromUserId !== activePeerUserId) return;
                 
                 try {
-                    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                    let answerObj = answer;
+                    if (typeof answer === 'string') {
+                        try { answerObj = JSON.parse(answer); } catch(e) {}
+                    }
+                    const answerInit = {
+                        type: (answerObj && answerObj.type) ? answerObj.type : 'answer',
+                        sdp: (answerObj && answerObj.sdp) ? answerObj.sdp : (typeof answerObj === 'string' ? answerObj : '')
+                    };
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(answerInit));
                     
                     // Flush queued remote ICE candidates
                     for (const candidate of iceCandidatesQueue) {
                         try {
-                            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                            const candObj = (candidate instanceof RTCIceCandidate) ? candidate : new RTCIceCandidate(candidate);
+                            await peerConnection.addIceCandidate(candObj);
                         } catch (cErr) {
                             console.error("Failed to add queued candidate:", cErr);
                         }
@@ -1107,7 +1160,8 @@
                     
                     switchState(states.ACTIVE);
                 } catch (err) {
-                    console.error(err);
+                    console.error("Error setting remote description on call-accepted:", err);
+                    alert("Failed to establish remote connection: " + err.message);
                     endCall();
                 }
             });
@@ -1132,10 +1186,13 @@
             socket.on('ice-candidate', async ({ fromUserId, candidate }) => {
                 if (fromUserId !== activePeerUserId || !peerConnection) return;
                 try {
-                    if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
-                        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-                    } else {
-                        iceCandidatesQueue.push(candidate);
+                    if (candidate) {
+                        const candidateObj = (candidate instanceof RTCIceCandidate) ? candidate : new RTCIceCandidate(candidate);
+                        if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
+                            await peerConnection.addIceCandidate(candidateObj);
+                        } else {
+                            iceCandidatesQueue.push(candidateObj);
+                        }
                     }
                 } catch (err) {
                     console.error("Error adding remote ICE candidate:", err);
